@@ -18,10 +18,10 @@ If a HDR video is embedded in your composition, it must be converted to SDR. Thi
 ### In `<Video />` and `<Html5Video />`
 
 In [`<Video />`](/docs/media/video) and [`<Html5Video />`](/docs/html5-video), color conversion is handled by the browser.  
-However, the `--gl` flag is relevant and may influence the colors.
+In Remotion 5, `angle` is already the default renderer during rendering, so you usually do not need to pass `--gl=angle` just for HDR playback.
 
-Tip: **Setting the `--gl=angle` will result in much better colors when embedding an HDR video (tested on macOS).**  
-We have not yet experimented with this enough to give a recommendation on which `--gl` flag to use.  
+If you are on Remotion 4 or want to override the renderer explicitly, `--gl=angle` can still improve color handling when embedding an HDR video (tested on macOS).  
+We have not yet experimented with this enough to give a recommendation on which `--gl` flag to use for all setups.  
 The Remotion team is keen to hear your experiences.
 
 ### In `<OffthreadVideo />`
