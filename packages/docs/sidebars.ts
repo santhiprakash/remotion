@@ -1379,6 +1379,7 @@ const sidebars: SidebarsConfig = {
 			label: 'Building apps',
 			items: [
 				'brownfield',
+				'eslint',
 				'studio-into-app',
 				'player-into-remotion-project',
 				'video-uploads',

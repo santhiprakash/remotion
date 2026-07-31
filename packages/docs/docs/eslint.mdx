@@ -1,0 +1,62 @@
+---
+image: /generated/articles-docs-brownfield-installation.png
+id: eslint
+title: Remotion ESLint packages
+sidebar_label: ESLint packages
+crumb: Brownfield integration
+---
+
+Remotion ships two public ESLint packages:
+
+- [`@remotion/eslint-config`](#remotioneslint-config) for ESLint 8 and earlier
+- [`@remotion/eslint-config-flat`](#remotioneslint-config-flat) for ESLint 9 and later
+- [`@remotion/eslint-plugin`](#remotioneslint-plugin) for Remotion-specific lint rules
+
+Use the shared config if you want the default Remotion template setup. Use the plugin directly if you want to add only the Remotion rules to an existing ESLint configuration.
+
+## `@remotion/eslint-config`
+
+Default configuration for Remotion templates with ESLint 8 and earlier.
+
+```bash
+npm install @remotion/eslint-config --save-exact
+```
+
+Install the matching version of all `remotion` and `@remotion/*` packages. Remove the `^` prefix from the version number so the packages stay aligned.
+
+## `@remotion/eslint-config-flat`
+
+Default configuration for Remotion templates with ESLint 9 and later.
+
+```bash
+npm install @remotion/eslint-config-flat --save-exact
+```
+
+This package is the flat-config equivalent of the legacy config.
+
+## `@remotion/eslint-plugin`
+
+Rules for writing Remotion code.
+
+```bash
+npm install @remotion/eslint-plugin --save-exact
+```
+
+This snippet enables the recommended rules only for Remotion files:
+
+```json title=".eslintrc"
+{
+  "plugins": ["@remotion"],
+  "overrides": [
+    {
+      "files": ["remotion/*.{ts,tsx}"],
+      "extends": ["plugin:@remotion/recommended"]
+    }
+  ]
+}
+```
+
+## See also
+
+- [Installing Remotion in an existing project](/docs/brownfield)
+- [Brownfield installation guide section for the ESLint plugin](/docs/brownfield#install-the-eslint-plugin)
