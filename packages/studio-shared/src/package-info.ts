@@ -406,11 +406,11 @@ export const apiDocs: {[key in Pkgs]: string | null} = {
 	'zod-types-v3': 'https://www.remotion.dev/docs/zod-types/v3',
 	gif: 'https://www.remotion.dev/docs/gif',
 	'eslint-plugin':
-		'https://www.remotion.dev/docs/brownfield#install-the-eslint-plugin',
+		'https://www.remotion.dev/docs/eslint',
 	'eslint-config':
-		'https://www.remotion.dev/docs/brownfield#install-the-eslint-plugin',
+		'https://www.remotion.dev/docs/eslint',
 	'eslint-config-flat':
-		'https://www.remotion.dev/docs/brownfield#install-the-eslint-plugin',
+		'https://www.remotion.dev/docs/eslint',
 	'compositor-linux-x64-gnu': null,
 	'compositor-linux-x64-musl': null,
 	'compositor-darwin-x64': null,

@@ -15,4 +15,4 @@ Remove the `^` character from the version number to use the exact version.
 
 ## Usage
 
-See the [documentation](https://www.remotion.dev/docs/brownfield#install-the-eslint-plugin) for more information.
+See the [ESLint packages documentation](https://www.remotion.dev/docs/eslint) for installation and configuration examples.

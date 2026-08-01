@@ -1,0 +1,81 @@
+---
+image: /generated/articles-docs-eslint.png
+id: eslint
+title: ESLint packages
+crumb: 'Installation'
+---
+
+Remotion publishes three ESLint packages:
+
+- [`@remotion/eslint-plugin`](#remotioneslint-plugin) for Remotion-specific lint rules
+- [`@remotion/eslint-config`](#remotioneslint-config) for projects on ESLint 8 or earlier
+- [`@remotion/eslint-config-flat`](#remotioneslint-config-flat) for projects on ESLint 9 or later
+
+If you are adding Remotion to an existing app, start with the [brownfield installation guide](/docs/brownfield-installation). If you are working inside the Remotion repo, see [formatting in the repo](/docs/contributing/formatting).
+
+## `@remotion/eslint-plugin`
+
+Use the plugin when you want Remotion-specific rules without inheriting a shared config. This is the package to install in existing projects that already manage their own ESLint setup.
+
+```bash
+npm i -D @remotion/eslint-plugin
+```
+
+```json title=".eslintrc"
+{
+  "plugins": ["@remotion"],
+  "overrides": [
+    {
+      "files": ["remotion/*.{ts,tsx}"],
+      "extends": ["plugin:@remotion/recommended"]
+    }
+  ]
+}
+```
+
+## `@remotion/eslint-config`
+
+Use the shared config if your project is still on ESLint 8 or earlier and you want Remotion's opinionated defaults.
+
+```bash
+npm i -D @remotion/eslint-config
+```
+
+Example usage:
+
+```json title=".eslintrc"
+{
+  "extends": ["@remotion/eslint-config"]
+}
+```
+
+## `@remotion/eslint-config-flat`
+
+Use the flat config package if your project is on ESLint 9 or later and uses `eslint.config.mjs`.
+
+```bash
+npm i -D @remotion/eslint-config-flat
+```
+
+```js title="eslint.config.mjs"
+import remotion from '@remotion/eslint-config-flat';
+
+export default [...remotion];
+```
+
+## Which package should I use?
+
+- Use `@remotion/eslint-plugin` if you already maintain your own ESLint config and just want Remotion rules.
+- Use `@remotion/eslint-config` if you are on ESLint 8 and want a shared legacy config.
+- Use `@remotion/eslint-config-flat` if you are on ESLint 9 and want the shared flat-config equivalent.
+
+## Compatibility
+
+- `@remotion/eslint-config` targets ESLint 8 and legacy `.eslintrc`-style setups.
+- `@remotion/eslint-config-flat` targets ESLint 9 and flat config.
+- Both packages require the `eslint` version that matches their peer dependency range.
+- `@remotion/eslint-plugin` works with both styles, but you wire it into the config format your project already uses.
+
+## Version alignment
+
+When installing a Remotion package, keep all `remotion` and `@remotion/*` packages on the same version. Use exact versions instead of `^` to avoid accidental mismatches.
