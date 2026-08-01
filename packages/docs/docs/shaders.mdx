@@ -84,13 +84,15 @@ export const FisheyeContent: React.FC = () => {
 
 ## Rendering
 
-When rendering a video that uses WebGL, pass [`--gl=angle`](/docs/gl-options) to ensure the headless browser can create a WebGL context:
+When rendering a video that uses WebGL, Remotion 5.0 uses [`angle`](/docs/gl-options) by default, with SwiftShader fallback on machines without a compatible GPU. No renderer flag is needed to make WebGL or WebGPU work.
+
+If you're rendering with Remotion 4.0, pass [`--gl=angle`](/docs/gl-options) to ensure the headless browser can create a WebGL context:
 
 ```bash
 bunx remotion render MyComp --gl=angle
 ```
 
-Without this flag, the headless browser may not have a WebGL context available.
+Without this flag, a Remotion 4.0 render may not have a WebGL context available.
 
 ## See also
 
