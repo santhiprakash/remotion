@@ -4,9 +4,11 @@ import promptsShow from './prompts-show.html';
 import promptsSubmit from './prompts-submit.html';
 import prompts from './prompts.html';
 import team from './team.html';
+import {htmlResponse} from './server-helpers';
 
 const startingPort = 3000;
 const maxPortAttempts = 100;
+
 
 const startServer = () => {
 	for (let port = startingPort; port < startingPort + maxPortAttempts; port++) {
@@ -14,11 +16,11 @@ const startServer = () => {
 			return serve({
 				port,
 				routes: {
-					'/': homepage,
-					'/about': team,
-					'/prompts': prompts,
-					'/prompts/show': promptsShow,
-					'/prompts/submit': promptsSubmit,
+					'/': htmlResponse(homepage),
+					'/about': htmlResponse(team),
+					'/prompts': htmlResponse(prompts),
+					'/prompts/show': htmlResponse(promptsShow),
+					'/prompts/submit': htmlResponse(promptsSubmit),
 				},
 				development: true,
 				async fetch(req) {
