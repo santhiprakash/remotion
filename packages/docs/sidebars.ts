@@ -1063,6 +1063,7 @@ const sidebars: SidebarsConfig = {
 				'animating-properties',
 				'reusability',
 				'preview',
+				'eslint',
 			],
 		},
 		{
