@@ -15,6 +15,7 @@ import {
 	type InteractivitySchema,
 } from 'remotion';
 import {colorToRgb} from './color-to-rgb';
+import {NoReactInternals} from 'remotion/no-react';
 
 export type StarburstProps = InteractiveBaseProps &
 	InteractiveTransformProps &
@@ -134,9 +135,11 @@ const StarburstCanvas: React.FC<{
 			});
 			if (!gl) {
 				cancelRender(
-					new Error(
-						'Failed to get WebGL context. Try rendering with --gl=angle to enable WebGL.',
-					),
+					NoReactInternals.ENABLE_V5_BREAKING_CHANGES
+						? Internals.createWebGLContextError('Starburst')
+						: new Error(
+								'Failed to get WebGL context. Try rendering with --gl=angle to enable WebGL.',
+							),
 				);
 				return null;
 			}

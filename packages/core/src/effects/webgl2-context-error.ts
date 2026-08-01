@@ -1,3 +1,5 @@
+import {ENABLE_V5_BREAKING_CHANGES} from '../v5-flag.js';
+
 const WEBGL_CONTEXT_DOCS_URL =
 	'https://remotion.dev/docs/troubleshooting/webgl2-context';
 
@@ -8,8 +10,10 @@ const webGlContextErrorMessage = (
 	effectName: string,
 ): string =>
 	`Failed to acquire ${versionLabel} context for ${effectName}. ` +
-	'Pass --gl=angle when using the CLI, set chromiumOptions: { gl: "angle" } when using SSR APIs, ' +
-	'or set "OpenGL render backend" to "angle" in the Advanced section when rendering in the Studio. ' +
+	(ENABLE_V5_BREAKING_CHANGES
+		? 'Remotion 5.0 already defaults to --gl=angle. '
+		: 'Pass --gl=angle when using the CLI, set chromiumOptions: { gl: "angle" } when using SSR APIs, ' +
+			'or set "OpenGL render backend" to "angle" in the Advanced section when rendering in the Studio. ') +
 	`See ${WEBGL_CONTEXT_DOCS_URL}`;
 
 export const createWebGLContextError = (effectName: string): Error =>
