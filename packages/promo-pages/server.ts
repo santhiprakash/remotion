@@ -5,6 +5,10 @@ import promptsSubmit from './prompts-submit.html';
 import prompts from './prompts.html';
 import team from './team.html';
 
+const htmlHeaders = {
+	'Cache-Control': 'no-cache',
+};
+
 const startingPort = 3000;
 const maxPortAttempts = 100;
 
@@ -14,11 +18,13 @@ const startServer = () => {
 			return serve({
 				port,
 				routes: {
-					'/': homepage,
-					'/about': team,
-					'/prompts': prompts,
-					'/prompts/show': promptsShow,
-					'/prompts/submit': promptsSubmit,
+					'/': new Response(homepage, {headers: htmlHeaders}),
+					'/about': new Response(team, {headers: htmlHeaders}),
+					'/prompts': new Response(prompts, {headers: htmlHeaders}),
+					'/prompts/show': new Response(promptsShow, {headers: htmlHeaders}),
+					'/prompts/submit': new Response(promptsSubmit, {
+						headers: htmlHeaders,
+					}),
 				},
 				development: true,
 				async fetch(req) {
