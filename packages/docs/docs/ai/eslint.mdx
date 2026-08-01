@@ -1,0 +1,75 @@
+---
+image: /generated/articles-docs-ai-eslint.png
+crumb: 'AI'
+title: ESLint packages
+---
+
+Remotion ships two public ESLint packages for different use cases:
+
+- [`@remotion/eslint-config`](https://github.com/remotion-dev/remotion/tree/main/packages/eslint-config) for the shared Remotion template config
+- [`@remotion/eslint-plugin`](https://github.com/remotion-dev/remotion/tree/main/packages/eslint-plugin) for the Remotion-specific rules
+
+The config package is the default for the older Remotion templates and brownfield projects that still use legacy ESLint configuration files. The plugin package exposes the Remotion rules directly, which is useful if you already have an ESLint setup and only want the Remotion-specific rules.
+
+## Which package to use
+
+Use `@remotion/eslint-config` if you want the default Remotion ESLint setup that templates and brownfield projects can extend.
+
+Use `@remotion/eslint-plugin` if you want the Remotion rules without the shared config, or if you need to wire the rules into an existing ESLint setup manually.
+
+## Supported ESLint versions
+
+`@remotion/eslint-config` is intended for the legacy ESLint configuration flow used by older projects and templates. It supports ESLint 7 and 8.
+
+`@remotion/eslint-config-flat` is the flat-config counterpart for templates that use ESLint 9 or later.
+
+`@remotion/eslint-plugin` exposes the rule set directly and can be paired with either legacy `.eslintrc`-style config or a flat config, depending on your project setup. It supports ESLint 7 and later.
+
+## Installation
+
+```bash
+npm install -D @remotion/eslint-config @remotion/eslint-plugin
+```
+
+If you are starting a new project with flat config, install `@remotion/eslint-config-flat` instead of `@remotion/eslint-config`.
+
+Install only the package you need if you do not want both.
+
+## Examples
+
+### Shared config
+
+```json title=".eslintrc"
+{
+  "extends": ["@remotion"]
+}
+```
+
+### Flat config
+
+```js title="eslint.config.mjs"
+import {config} from '@remotion/eslint-config-flat';
+
+export default config;
+```
+
+### Plugin directly
+
+```json title=".eslintrc"
+{
+  "plugins": ["@remotion"],
+  "overrides": [
+    {
+      "files": ["remotion/*.{ts,tsx}"],
+      "extends": ["plugin:@remotion/recommended"]
+    }
+  ]
+}
+```
+
+## See also
+
+- [`@remotion/eslint-config`](https://github.com/remotion-dev/remotion/tree/main/packages/eslint-config)
+- [`@remotion/eslint-config-flat`](https://github.com/remotion-dev/remotion/tree/main/packages/eslint-config-flat)
+- [`@remotion/eslint-plugin`](https://github.com/remotion-dev/remotion/tree/main/packages/eslint-plugin)
+- [Brownfield installation](/docs/brownfield-installation)
