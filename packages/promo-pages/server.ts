@@ -7,6 +7,9 @@ import team from './team.html';
 
 const startingPort = 3000;
 const maxPortAttempts = 100;
+const noStoreHeaders = {
+	'Cache-Control': 'no-cache, no-store, must-revalidate',
+};
 
 const startServer = () => {
 	for (let port = startingPort; port < startingPort + maxPortAttempts; port++) {
@@ -14,11 +17,11 @@ const startServer = () => {
 			return serve({
 				port,
 				routes: {
-					'/': homepage,
-					'/about': team,
-					'/prompts': prompts,
-					'/prompts/show': promptsShow,
-					'/prompts/submit': promptsSubmit,
+					'/': new Response(homepage, {headers: noStoreHeaders}),
+					'/about': new Response(team, {headers: noStoreHeaders}),
+					'/prompts': new Response(prompts, {headers: noStoreHeaders}),
+					'/prompts/show': new Response(promptsShow, {headers: noStoreHeaders}),
+					'/prompts/submit': new Response(promptsSubmit, {headers: noStoreHeaders}),
 				},
 				development: true,
 				async fetch(req) {
@@ -29,7 +32,7 @@ const startServer = () => {
 						if (!exists) {
 							return new Response('Not Found', {status: 404});
 						}
-						return new Response(file);
+						return new Response(file, {headers: noStoreHeaders});
 					} catch (e) {
 						return new Response('Server Error', {status: 500});
 					}
