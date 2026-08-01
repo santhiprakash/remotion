@@ -4,7 +4,7 @@
     <img src="demo.gif" style="border-radius: 5px">
 </p>
 
-[This is a template repository, click "Use this template" to create a repository based off this template!](https://github.com/remotion-dev/remotion-template-three/generate)
+[This is a template repository, click "Use this template" to create a repository based off this template!](https://github.com/new?template_name=template-three&template_owner=remotion-dev)
 
 This is a lightweight boilerplate for [Remotion](https://github.com/remotion-dev/remotion) with [React Three Fiber](https://github.com/pmndrs/react-three-fiber) and [@remotion/three](https://remotion.dev/docs/three) preinstalled.
 
