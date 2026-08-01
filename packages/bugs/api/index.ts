@@ -5,6 +5,7 @@ export default async function handler() {
 			status: 200,
 			headers: {
 				'content-type': 'text/html',
+				'cache-control': 'no-store',
 			},
 		},
 	);
