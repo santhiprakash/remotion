@@ -14,6 +14,7 @@ export const config: VercelConfig = {
 	buildCommand:
 		'cd .. && timeout 20m bunx turbo run build-docs --no-update-notifier --concurrency=2',
 	headers: [
+		routes.header('/', [{key: 'Cache-Control', value: 'no-store'}]),
 		routes.header('/assets/(.*)', browserStudioAssetHeaders),
 		routes.header('/_raw/docs/(.*).md', [
 			{key: 'Content-Type', value: 'text/plain; charset=utf-8'},
