@@ -138,11 +138,6 @@ export const makeBrowserRunner = async ({
 			}
 		}
 
-		deleteDirectory(userDataDir);
-
-		// Cleanup this listener last, as that makes sure the full callback runs. If we
-		// perform this earlier, then the previous function calls would not happen.
-		removeEventListeners(listeners);
 	};
 
 	const closeProcess = (): Promise<void> => {
@@ -156,12 +151,13 @@ export const makeBrowserRunner = async ({
 		);
 		killProcess();
 
-		deleteDirectory(userDataDir);
+		return processClosing.then(() => {
+			deleteDirectory(userDataDir);
 
-		// Cleanup this listener last, as that makes sure the full callback runs. If we
-		// perform this earlier, then the previous function calls would not happen.
-		removeEventListeners(listeners);
-		return processClosing;
+			// Cleanup this listener last, as that makes sure the full callback runs. If we
+			// perform this earlier, then the previous function calls would not happen.
+			removeEventListeners(listeners);
+		});
 	};
 
 	if (dumpio) {
