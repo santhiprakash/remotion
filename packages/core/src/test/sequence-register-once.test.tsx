@@ -1539,3 +1539,58 @@ test('Imperative sequence refs update without rerendering ref-only consumers', a
 	});
 	expect(renders).toBe(1);
 });
+
+test('withInteractivitySchema gives a different overrideId when a new interactive element reuses a deleted elements stack', () => {
+	const registeredSequences: TSequence[] = [];
+	const stack = 'same-stack-override-id-test';
+
+	const {rerender} = render(
+		<SequenceTestWrapper
+			onRegisterSequence={(sequence) => {
+				registeredSequences.push(sequence);
+			}}
+		>
+			<Interactive.Div
+				key="eyebrow"
+				name="Eyebrow"
+				style={{textTransform: 'uppercase'}}
+				{...({
+					_remotionInternalStack: stack,
+				} as {readonly _remotionInternalStack: string})}
+			>
+				Performance overview
+			</Interactive.Div>
+		</SequenceTestWrapper>,
+	);
+
+	const firstSequence = registeredSequences.find(
+		(sequence) => sequence.displayName === 'Eyebrow',
+	);
+	expect(firstSequence?.controls?.overrideId).toBeDefined();
+	const firstOverrideId = firstSequence?.controls?.overrideId;
+
+	registeredSequences.length = 0;
+	rerender(
+		<SequenceTestWrapper
+			onRegisterSequence={(sequence) => {
+				registeredSequences.push(sequence);
+			}}
+		>
+			<Interactive.Div
+				key="title"
+				name="Title"
+				{...({
+					_remotionInternalStack: stack,
+				} as {readonly _remotionInternalStack: string})}
+			>
+				Regional growth
+			</Interactive.Div>
+		</SequenceTestWrapper>,
+	);
+
+	const secondSequence = registeredSequences.find(
+		(sequence) => sequence.displayName === 'Title',
+	);
+	expect(secondSequence?.controls?.overrideId).toBeDefined();
+	expect(secondSequence?.controls?.overrideId).not.toBe(firstOverrideId);
+});

@@ -236,13 +236,21 @@ export const withInteractivitySchema = <
 				return String(Math.random());
 			}
 
-			const existingOverrideId = stackToOverrideMap[internalStack];
+			// Different interactive elements can end up at the same source
+			// location (e.g. after a sibling is deleted and code shifts up).
+			// Using only the stack would make the next element inherit the
+			// previous element's overrideId and nodePath, so we also key the
+			// override by the element's component identity and name.
+			const name =
+				(cleanProps as {name?: string | number}).name ?? componentName;
+			const overrideIdKey = `${internalStack}:${componentIdentity ?? ''}:${name}`;
+			const existingOverrideId = stackToOverrideMap[overrideIdKey];
 			if (existingOverrideId) {
 				return existingOverrideId;
 			}
 
 			const newOverrideId = String(Math.random());
-			stackToOverrideMap[internalStack] = newOverrideId;
+			stackToOverrideMap[overrideIdKey] = newOverrideId;
 			return newOverrideId;
 		});
 		const nodePath = env.isReadOnlyStudio
