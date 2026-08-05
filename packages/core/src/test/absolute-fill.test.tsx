@@ -13,3 +13,21 @@ test('AbsoluteFill renders outside a composition', () => {
 	expect(markup).toContain('class="layer"');
 	expect(markup).toContain('background-color:red');
 });
+
+test('AbsoluteFill renders in Studio outside a composition', () => {
+	const previous = window.remotion_isStudio;
+	window.remotion_isStudio = true;
+	try {
+		const markup = renderToString(
+			<AbsoluteFill className="overlay" style={{backgroundColor: 'blue'}}>
+				Modal
+			</AbsoluteFill>,
+		);
+
+		expect(markup).toContain('Modal');
+		expect(markup).toContain('class="overlay"');
+		expect(markup).toContain('background-color:blue');
+	} finally {
+		window.remotion_isStudio = previous;
+	}
+});

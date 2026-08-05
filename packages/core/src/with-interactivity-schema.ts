@@ -30,6 +30,7 @@ import {
 	VisualModePropStatusesContext,
 } from './SequenceManager.js';
 import {useCurrentFrame} from './use-current-frame.js';
+import {CanUseRemotionHooks} from './CanUseRemotionHooks.js';
 import {useRemotionEnvironment} from './use-remotion-environment.js';
 import {computeEffectiveSchemaValuesDotNotation} from './use-schema.js';
 
@@ -189,8 +190,9 @@ export const withInteractivitySchema = <
 		} = props as Props & {readonly _remotionInternalStack?: string};
 		const cleanProps = propsWithoutInternalStack as Props;
 		const env = useRemotionEnvironment();
+		const canUseRemotionHooks = useContext(CanUseRemotionHooks);
 
-		if (!env.isStudio || env.isRendering) {
+		if (!env.isStudio || env.isRendering || !canUseRemotionHooks) {
 			return React.createElement(Component, {
 				...cleanProps,
 				controls: null,
