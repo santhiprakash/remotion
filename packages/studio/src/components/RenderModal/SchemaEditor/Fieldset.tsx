@@ -45,5 +45,9 @@ export const Fieldset: React.FC<{
 		);
 	}
 
-	return content;
+	return (
+		<AlreadyPaddedRightContext.Provider value={false}>
+			{content}
+		</AlreadyPaddedRightContext.Provider>
+	);
 };
