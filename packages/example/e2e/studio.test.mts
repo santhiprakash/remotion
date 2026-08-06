@@ -491,4 +491,45 @@ test.describe('visual mode', () => {
 		);
 		expect(shortVideoTag).toContain('from={45}');
 	});
+
+	test('Open in editor split button uses CSS hoverable system', async ({
+		page,
+	}) => {
+		await navigateToSchemaTest(page);
+		await page.locator('[data-sidebar-toggle="right"]').click();
+
+		const sourceLocation = page
+			.getByRole('group', {name: 'Inspector source location'})
+			.first();
+		await expect(sourceLocation).toBeVisible({timeout: 15_000});
+
+		const openInAnotherApp = sourceLocation.getByRole('button', {
+			name: 'Open in another app',
+		});
+
+		const {className, styleAttr} = await openInAnotherApp.evaluate((el) => ({
+			className: el.className,
+			styleAttr: el.getAttribute('style') ?? '',
+		}));
+
+		expect(className).toContain('__remotion-hoverable');
+		expect(styleAttr).toContain('--remotion-hoverable-bg');
+		expect(styleAttr).toContain('--remotion-hoverable-hover-bg');
+		expect(styleAttr).toContain('--remotion-hoverable-color');
+
+		const isInsideHoverGroup = await openInAnotherApp.evaluate((el) => {
+			let node = el.parentElement;
+			while (node) {
+				if (node.classList?.contains('__remotion-hover-group')) {
+					return true;
+				}
+
+				node = node.parentElement;
+			}
+
+			return false;
+		});
+
+		expect(isInsideHoverGroup).toBe(true);
+	});
 });
