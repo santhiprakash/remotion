@@ -186,7 +186,12 @@ const interactiveSvgStrokeElementSchema = {
 
 const interactiveSvgRootElementSchema = {
 	...interactiveBorderElementSchema,
-	...svgPaintSchema,
+	...svgStrokeSchema,
+	color: {
+		type: 'color',
+		default: undefined,
+		description: 'Color',
+	},
 } as const satisfies InteractivitySchema;
 
 const setRef = <ElementType,>(

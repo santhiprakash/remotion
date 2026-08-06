@@ -1381,11 +1381,17 @@ test('Interactive elements register their rendered element for Studio outlines',
 		'<Interactive.G>',
 		'<Interactive.Path>',
 		'<Interactive.Rect>',
-		'<Interactive.Svg>',
 		'<Interactive.Text>',
 	]) {
 		expect(getByName(displayName)?.controls?.schema).toHaveProperty('fill');
 	}
+
+	expect(getByName('<Interactive.Svg>')?.controls?.schema).toHaveProperty(
+		'color',
+	);
+	expect(getByName('<Interactive.Svg>')?.controls?.schema).not.toHaveProperty(
+		'fill',
+	);
 
 	expect(getByName('<Interactive.Line>')?.controls?.schema).not.toHaveProperty(
 		'fill',

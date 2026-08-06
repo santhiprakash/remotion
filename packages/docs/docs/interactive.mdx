@@ -55,7 +55,8 @@ Available SVG elements:
 
 All SVG elements expose controls for the `stroke` and `strokeWidth` props.
 Elements with a paintable interior also expose a color control for `fill`.
-On `Svg` and `G`, these controls set inherited paint defaults for descendants.
+On `G`, these controls set inherited paint defaults for descendants.
+The root `Svg` element exposes a `color` control instead of `fill`, because `fill` has no effect on the root; `color` is the inherited presentation property that drives `currentColor` in descendants.
 Keep these values inline in JSX if the Studio should edit or keyframe them.
 The `strokeWidth` control defaults to SVG's initial value of `1`; resetting it
 removes the prop from the JSX.
