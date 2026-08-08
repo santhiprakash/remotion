@@ -136,7 +136,7 @@ const PlayerFn = <
 		doubleClickToFullscreen = false,
 		spaceKeyToPlayOrPause = true,
 		moveToBeginningWhenEnded = true,
-		numberOfSharedAudioTags = 5,
+		numberOfSharedAudioTags = Internals.resolveV5Default(undefined) ? 0 : 5,
 		errorFallback = () => '⚠️',
 		playbackRate = 1,
 		renderLoading,

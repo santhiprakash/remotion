@@ -90,10 +90,10 @@ There are three different cases here:
 
 ## Using the `numberOfSharedAudioTags` prop
 
-By default, Remotion will mount 5 auxiliary `<audio>` tags that will "warm" up with the first user interaction.  
+By default, Remotion will mount 5 auxiliary `<audio>` tags in Remotion 4.0 (and none in Remotion 5.0) that will "warm" up with the first user interaction.  
 If an `<Html5Audio>` tag is played after the first user interaction, it will be mounted into one of the auxiliary tags and will be allowed to play.
 
-If you have more than 5 `<Html5Audio>` tags that play at the same time, you can increase the number of auxiliary tags by passing the [`numberOfSharedAudioTags`](/docs/player/player#numberofsharedaudiotags) prop to the `<Player>`, because otherwise an error will be thrown.
+If you have more than the default number of `<Html5Audio>` tags that play at the same time, you can increase the number of auxiliary tags by passing the [`numberOfSharedAudioTags`](/docs/player/player#numberofsharedaudiotags) prop to the `<Player>`, because otherwise an error will be thrown.
 
 ## Dealing with an autoplay failure<AvailableFrom v="4.0.187" />
 

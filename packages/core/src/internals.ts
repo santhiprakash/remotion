@@ -241,6 +241,7 @@ import {
 } from './use-schema.js';
 import {useUnsafeVideoConfig} from './use-unsafe-video-config.js';
 import {useVideo} from './use-video.js';
+import {resolveV5Default} from './v5-flag.js';
 import {validateMediaProps} from './validate-media-props.js';
 import {
 	resolveTrimProps,
@@ -451,6 +452,7 @@ export const Internals = {
 	fromField,
 	resolveSequenceCrop,
 	useCropStyle,
+	resolveV5Default,
 } as const;
 
 export type {
