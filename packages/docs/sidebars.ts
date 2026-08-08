@@ -359,6 +359,24 @@ const sidebars: SidebarsConfig = {
 		},
 		{
 			type: 'category',
+			label: '@remotion/eslint-config',
+			link: {
+				type: 'doc',
+				id: 'eslint-config',
+			},
+			items: [],
+		},
+		{
+			type: 'category',
+			label: '@remotion/eslint-plugin',
+			link: {
+				type: 'doc',
+				id: 'eslint-plugin',
+			},
+			items: [],
+		},
+		{
+			type: 'category',
 			label: '@remotion/fonts',
 			link: {
 				type: 'doc',

@@ -1,0 +1,83 @@
+---
+image: /generated/articles-docs-eslint-config.png
+id: eslint-config
+title: '@remotion/eslint-config'
+crumb: '@remotion/eslint-config'
+---
+
+This package provides a shareable ESLint configuration for Remotion projects. It bundles `eslint:recommended`, TypeScript and React rules, Prettier-compatible overrides, and the recommended rules from [`@remotion/eslint-plugin`](/docs/eslint-plugin).
+
+If you already have an ESLint setup, use [`@remotion/eslint-plugin`](/docs/eslint-plugin) directly to add only the Remotion-specific rules.
+
+## Installation
+
+<Installation pkg="@remotion/eslint-config" />
+
+If you are on ESLint 9 or later, install [`@remotion/eslint-config-flat`](/docs/eslint-config#flat-config) instead.
+
+## Legacy config (ESLint ≤ 8)
+
+For ESLint 7 and 8, extend the shareable config from an `.eslintrc` file:
+
+```json title=".eslintrc"
+{
+  "extends": ["@remotion"]
+}
+```
+
+The full package name can also be used:
+
+```json title=".eslintrc"
+{
+  "extends": ["@remotion/eslint-config"]
+}
+```
+
+The TypeScript, React and Remotion overrides are automatically applied to `*.{ts,tsx}` files.
+
+## Flat config (ESLint ≥ 9)
+
+ESLint 9 introduced the flat config format (`eslint.config.mjs`). For that, install the flat package and export the config array:
+
+<Installation pkg="@remotion/eslint-config-flat" />
+
+```js title="eslint.config.mjs"
+import {config} from '@remotion/eslint-config-flat';
+
+export default config;
+```
+
+If your Remotion files are in a different directory, use `makeConfig()` and pass a glob:
+
+```js title="eslint.config.mjs"
+import {makeConfig} from '@remotion/eslint-config-flat';
+
+export default makeConfig({
+  remotionDir: 'remotion/**',
+});
+```
+
+`remotionDir` restricts the Remotion-specific rules to files matching the glob. The remaining rules still apply to all files.
+
+## What's included
+
+- `eslint:recommended`
+- `@typescript-eslint/recommended` for `.ts` and `.tsx` files
+- `plugin:react/recommended` and `react-hooks` rules
+- All recommended rules from [`@remotion/eslint-plugin`](/docs/eslint-plugin)
+- Prettier-compatible rule overrides
+
+## Version support
+
+- [`@remotion/eslint-config`](/docs/eslint-config) supports ESLint `>=7.15.0` through `8.x`.
+- [`@remotion/eslint-config-flat`](/docs/eslint-config) requires ESLint `>=9`.
+- Both packages peer-depend on `eslint`. Use the package that matches the major version of ESLint installed in your project.
+
+## Compatibility
+
+<CompatibilityTable chrome={false} firefox={false} safari={false} nodejs bun serverlessFunctions={false} clientSideRendering={false} serverSideRendering={false} player={false} studio={false} />
+
+## See also
+
+- [`@remotion/eslint-plugin`](/docs/eslint-plugin)
+- [Installing Remotion in an existing project](/docs/brownfield)

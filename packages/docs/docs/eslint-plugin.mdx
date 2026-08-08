@@ -1,0 +1,102 @@
+---
+image: /generated/articles-docs-eslint-plugin.png
+id: eslint-plugin
+title: '@remotion/eslint-plugin'
+crumb: '@remotion/eslint-plugin'
+---
+
+This package provides ESLint rules for writing Remotion code. It catches common mistakes such as using [`Math.random()`](/docs/using-randomness), referencing assets as strings, or applying non-pure CSS animations.
+
+If you do not have an existing ESLint config, install the shareable [`@remotion/eslint-config`](/docs/eslint-config) package instead.
+
+## Installation
+
+<Installation pkg="@remotion/eslint-plugin" />
+
+## Usage
+
+### Legacy config (ESLint ≤ 8)
+
+Add the plugin to your `.eslintrc` and enable the recommended rules for your Remotion files:
+
+```json title=".eslintrc"
+{
+  "plugins": ["@remotion"],
+  "overrides": [
+    {
+      "files": ["remotion/*.{ts,tsx}"],
+      "extends": ["plugin:@remotion/recommended"]
+    }
+  ]
+}
+```
+
+To enable a rule individually, use the full rule name:
+
+```json title=".eslintrc"
+{
+  "plugins": ["@remotion"],
+  "rules": {
+    "@remotion/deterministic-randomness": "error"
+  }
+}
+```
+
+### Flat config (ESLint ≥ 9)
+
+Import the plugin and register the rules in an `eslint.config.mjs`:
+
+```js title="eslint.config.mjs"
+import remotionPlugin from '@remotion/eslint-plugin';
+
+export default [
+  {
+    plugins: {
+      '@remotion': remotionPlugin,
+    },
+    rules: {
+      ...remotionPlugin.configs.recommended.rules,
+    },
+  },
+];
+```
+
+For a pre-made flat config, use [`@remotion/eslint-config-flat`](/docs/eslint-config#flat-config).
+
+## Rules
+
+All rules are prefixed with `@remotion/`.
+
+| Rule                                | Default | Description                                                                                                                                                  |
+| ----------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `warn-native-media-tag`             | error   | Prefer Remotion's [`<Img>`](/docs/img), [`<IFrame>`](/docs/iframe), [`<Audio>`](/docs/media/audio) and [`<Video>`](/docs/media/video) over native HTML tags. |
+| `deterministic-randomness`          | error   | [`Math.random()`](/docs/using-randomness) is not deterministic across frames. Use [`random()`](/docs/random) instead.                                        |
+| `no-string-assets`                  | error   | Do not reference local assets as strings. Use an import or [`staticFile()`](/docs/staticfile).                                                               |
+| `even-dimensions`                   | error   | Composition `width` and `height` should be divisible by 2 for H.264/H.265.                                                                                   |
+| `duration-in-frames`                | error   | `durationInFrames={Infinity}` on a [`<Sequence>`](/docs/sequence) is the default and can be removed.                                                         |
+| `from-0`                            | error   | `from={0}` on a [`<Sequence>`](/docs/sequence) is the default and can be removed.                                                                            |
+| `volume-callback`                   | error   | Prefer a callback for [`volume`](/docs/audio/volume).                                                                                                        |
+| `use-gif-component`                 | error   | Use the [`<Gif>`](/docs/gif) component for animated GIFs.                                                                                                    |
+| `staticfile-no-relative`            | error   | Do not pass relative or absolute paths to [`staticFile()`](/docs/staticfile).                                                                                |
+| `staticfile-no-remote`              | error   | Do not pass remote URLs to [`staticFile()`](/docs/staticfile).                                                                                               |
+| `no-background-image`               | error   | Do not use `background-image` in Remotion.                                                                                                                   |
+| `non-pure-animation`                | warn    | CSS `transition` and Tailwind transition classes may cause flickering.                                                                                       |
+| `slow-css-property`                 | warn    | GPU-heavy CSS properties such as `box-shadow`, `text-shadow` and `filter` may slow renders.                                                                  |
+| `v4-config-import`                  | error   | Import [`Config`](/docs/config) from [`@remotion/cli/config`](/docs/cli/cli) instead of `remotion`.                                                          |
+| `no-object-fit-on-media-video`      | warn    | Use the `objectFit` prop directly on [`<Video>`](/docs/media/video) instead of `style` or `className`.                                                       |
+| `valid-composition-and-folder-name` | error   | [`<Composition>`](/docs/composition) `id`s and [`<Folder>`](/docs/folder) `name`s may only contain allowed characters.                                       |
+
+Use `error` or `warn` in your config to override the default severity.
+
+## Version support
+
+`@remotion/eslint-plugin` peer-depends on `eslint >=7.0.0`. It works with both legacy `.eslintrc` files (ESLint 7–8) and flat config files (ESLint 9+).
+
+## Compatibility
+
+<CompatibilityTable chrome={false} firefox={false} safari={false} nodejs bun serverlessFunctions={false} clientSideRendering={false} serverSideRendering={false} player={false} studio={false} />
+
+## See also
+
+- [`@remotion/eslint-config`](/docs/eslint-config)
+- [Installing Remotion in an existing project](/docs/brownfield)
