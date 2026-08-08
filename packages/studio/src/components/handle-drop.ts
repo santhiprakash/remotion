@@ -145,7 +145,9 @@ export const handleDrop = async ({
 				dimensions: element.element.dimensions,
 				dropPosition,
 			}),
-			source: {type: 'drag-and-drop'},
+			source: element.origin
+				? {type: 'studio-protocol', origin: element.origin}
+				: {type: 'drag-and-drop'},
 		});
 		return;
 	}

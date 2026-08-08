@@ -9,7 +9,7 @@ import {
 	type ElementDragData,
 	type ElementInstallationMode,
 } from './element-drag-data';
-import {isRecord} from './validation';
+import {isRecord, isUrl} from './validation';
 
 const MAX_PAYLOAD_SIZE = 250_000;
 const MAX_SOURCE_CODE_SIZE = 200_000;
@@ -23,6 +23,7 @@ export type CreateElementPayloadInput = {
 	readonly dimensions: ComponentDimensions | null;
 	readonly durationInFrames: number;
 	readonly installationMode?: ElementInstallationMode;
+	readonly origin?: string;
 };
 
 export type StudioElementPayload = ElementDragData & {
@@ -82,6 +83,13 @@ const assertCreateElementPayloadInput = (
 			'installationMode must be "wrapped" or "component-owned-sequence"',
 		);
 	}
+
+	if (
+		input.origin !== undefined &&
+		(typeof input.origin !== 'string' || !isUrl(input.origin))
+	) {
+		throw new TypeError('origin must be a valid URL');
+	}
 };
 
 export const createElementPayload = (
@@ -97,6 +105,7 @@ export const createElementPayload = (
 		slug: input.slug,
 		sourceCode: input.sourceCode,
 		installationMode: input.installationMode ?? 'wrapped',
+		origin: input.origin,
 	});
 	const payload: StudioElementPayload = {
 		...constructed.data,
@@ -125,6 +134,7 @@ export const parseStudioElementPayload = (
 			type: value.type,
 			version: value.version,
 			element: value.element,
+			origin: value.origin,
 		}),
 	);
 	if (element === null) return null;

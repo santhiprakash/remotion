@@ -2,7 +2,7 @@ import {
 	isComponentIdentifier,
 	type ComponentDimensions,
 } from './component-drag-data';
-import {isRecord, isValidPackageName} from './validation';
+import {isRecord, isUrl, isValidPackageName} from './validation';
 
 export type ElementInstallationMode = 'wrapped' | 'component-owned-sequence';
 
@@ -19,6 +19,7 @@ export type ElementDependency =
 export type ElementDragData = {
 	type: 'remotion-element';
 	version: 1;
+	origin?: string;
 	element: {
 		dependencies: ElementDependency[];
 		durationInFrames?: number;
@@ -134,8 +135,10 @@ export const makeElementDragData = ({
 	slug,
 	sourceCode,
 	installationMode,
+	origin,
 }: Omit<ElementDragData['element'], 'dependencies'> & {
 	dependencies: ElementDependency[];
+	origin?: string;
 }): ElementDragData => {
 	for (const dependency of dependencies) {
 		assertElementDependency(dependency);
@@ -144,6 +147,7 @@ export const makeElementDragData = ({
 	return {
 		type: 'remotion-element',
 		version: 1,
+		...(origin !== undefined ? {origin} : {}),
 		element: {
 			dependencies: Array.from(
 				new Map(
@@ -201,6 +205,7 @@ export const parseElementDragData = (value: string): ElementDragData | null => {
 			sourceCode,
 			installationMode,
 		} = parsed.element;
+		const {origin} = parsed;
 		const validDependencies =
 			Array.isArray(dependencies) && dependencies.length <= 100
 				? dependencies
@@ -222,9 +227,12 @@ export const parseElementDragData = (value: string): ElementDragData | null => {
 				!isElementInstallationMode(installationMode)) ||
 			(dimensions !== undefined &&
 				dimensions !== null &&
-				!isDimensions(dimensions))
+				!isDimensions(dimensions)) ||
+			(origin !== undefined &&
+				(typeof origin !== 'string' || !isUrl(origin) || origin.length > 1000))
 		)
 			return null;
+		const validatedOrigin = typeof origin === 'string' ? origin : undefined;
 		return makeElementDragData({
 			dependencies: validDependencies,
 			dimensions: dimensions ?? null,
@@ -233,6 +241,7 @@ export const parseElementDragData = (value: string): ElementDragData | null => {
 			slug,
 			sourceCode,
 			installationMode,
+			origin: validatedOrigin,
 		});
 	} catch {
 		return null;

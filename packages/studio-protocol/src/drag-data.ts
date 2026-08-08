@@ -82,6 +82,7 @@ export type MakeEffectDragDataInput = EffectDragData['effect'] & {
 export type MakeElementDragDataInput = ElementDragData['element'] & {
 	readonly type: 'element';
 	readonly durationInFrames: number;
+	readonly origin?: string;
 };
 
 export type MakeSfxDragDataInput = SfxDragData['sfx'] & {
@@ -297,6 +298,7 @@ export const makeDragData = ((
 					slug: input.slug,
 					sourceCode: input.sourceCode,
 					installationMode: input.installationMode,
+					origin: input.origin,
 				}),
 				{
 					type: input.type,

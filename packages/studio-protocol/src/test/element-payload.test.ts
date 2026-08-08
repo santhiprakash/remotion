@@ -165,3 +165,31 @@ test('rejects invalid Element authoring input with actionable errors', () => {
 		expect(() => createInvalidPayload(input)).toThrow(message);
 	}
 });
+
+test('preserves origin in drag and studio payloads', () => {
+	const payload = createElementPayload({
+		...validInput,
+		origin: 'https://www.remotion.dev',
+	});
+	expect(payload.origin).toBe('https://www.remotion.dev');
+	expect(parseStudioElementPayload(payload)).toEqual(payload);
+
+	const data = new Map<string, string>();
+	const dataTransfer = {
+		effectAllowed: 'none',
+		setData: (type: string, value: string) => data.set(type, value),
+	} as unknown as DataTransfer;
+	setStudioDragData({dataTransfer, payload});
+
+	const mimeType =
+		'application/vnd.remotion.drag+json;v=1;type=element;width=800;height=200;duration=90';
+	const parsed = parseDragData({
+		mimeType,
+		payload: data.get(mimeType)!,
+	});
+	if (parsed?.type !== 'element') {
+		throw new Error('Expected element drag data');
+	}
+
+	expect(parsed.data.origin).toBe('https://www.remotion.dev');
+});
