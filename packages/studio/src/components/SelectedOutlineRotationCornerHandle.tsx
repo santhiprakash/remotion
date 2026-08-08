@@ -19,6 +19,7 @@ import {
 	type SelectedOutlineKeyframedDragChange,
 	type SelectedOutlineStaticDragChange,
 } from './selected-outline-drag';
+import {getSelectedOutlineHandleSize} from './selected-outline-geometry';
 import type {SelectedOutline} from './selected-outline-geometry';
 import {
 	getAngleDegrees,
@@ -82,6 +83,10 @@ export const SelectedOutlineRotationCornerHandle: React.FC<{
 	const cornerInfo = useMemo(
 		() => getSelectedOutlineRotationCornerInfo(outline.points, corner),
 		[corner, outline.points],
+	);
+	const radius = useMemo(
+		() => getSelectedOutlineHandleSize(outline.points),
+		[outline.points],
 	);
 
 	const onPointerDown = React.useCallback(
@@ -337,7 +342,7 @@ export const SelectedOutlineRotationCornerHandle: React.FC<{
 				ref={circleRef}
 				cx={cornerInfo.point.x}
 				cy={cornerInfo.point.y}
-				r={12}
+				r={radius}
 				fill={TRANSPARENT}
 				stroke={TRANSPARENT}
 				vectorEffect="non-scaling-stroke"

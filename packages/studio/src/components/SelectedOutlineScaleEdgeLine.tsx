@@ -19,6 +19,7 @@ import {
 	type SelectedOutlineScaleEdge,
 	type SelectedOutlineStaticDragChange,
 } from './selected-outline-drag';
+import {getSelectedOutlineHandleSize} from './selected-outline-geometry';
 import type {SelectedOutline} from './selected-outline-geometry';
 import {
 	dot,
@@ -75,6 +76,10 @@ export const SelectedOutlineScaleEdgeLine: React.FC<{
 	const edgeInfo = useMemo(
 		() => getSelectedOutlineScaleEdgeInfo(outline.points, edge),
 		[edge, outline.points],
+	);
+	const handleSize = useMemo(
+		() => getSelectedOutlineHandleSize(outline.points),
+		[outline.points],
 	);
 
 	const onPointerDown = React.useCallback(
@@ -274,7 +279,7 @@ export const SelectedOutlineScaleEdgeLine: React.FC<{
 				x2={edgeInfo.end.x}
 				y2={edgeInfo.end.y}
 				stroke={TRANSPARENT}
-				strokeWidth={12}
+				strokeWidth={handleSize}
 				vectorEffect="non-scaling-stroke"
 				pointerEvents="stroke"
 				cursor={edgeInfo.cursor}

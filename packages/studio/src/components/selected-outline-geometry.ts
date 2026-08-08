@@ -38,3 +38,12 @@ export const mixPoint = (
 		y: mix(from.y, to.y, progress),
 	};
 };
+
+export const getSelectedOutlineHandleSize = (
+	points: SelectedOutline['points'],
+): number => {
+	const [tl, tr, br] = points;
+	const width = Math.hypot(tr.x - tl.x, tr.y - tl.y);
+	const height = Math.hypot(br.x - tr.x, br.y - tr.y);
+	return clamp(Math.min(width, height) / 10, 4, 12);
+};
