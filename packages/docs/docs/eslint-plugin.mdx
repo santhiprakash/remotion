@@ -65,28 +65,27 @@ For a pre-made flat config, use [`@remotion/eslint-config-flat`](/docs/eslint-co
 
 ## Rules
 
-All rules are prefixed with `@remotion/`.
+All rules are prefixed with `@remotion/`. The `recommended` config enables the following rules with the listed severity:
 
-| Rule                                | Default | Description                                                                                                                                                  |
-| ----------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `warn-native-media-tag`             | error   | Prefer Remotion's [`<Img>`](/docs/img), [`<IFrame>`](/docs/iframe), [`<Audio>`](/docs/media/audio) and [`<Video>`](/docs/media/video) over native HTML tags. |
-| `deterministic-randomness`          | error   | [`Math.random()`](/docs/using-randomness) is not deterministic across frames. Use [`random()`](/docs/random) instead.                                        |
-| `no-string-assets`                  | error   | Do not reference local assets as strings. Use an import or [`staticFile()`](/docs/staticfile).                                                               |
-| `even-dimensions`                   | error   | Composition `width` and `height` should be divisible by 2 for H.264/H.265.                                                                                   |
-| `duration-in-frames`                | error   | `durationInFrames={Infinity}` on a [`<Sequence>`](/docs/sequence) is the default and can be removed.                                                         |
-| `from-0`                            | error   | `from={0}` on a [`<Sequence>`](/docs/sequence) is the default and can be removed.                                                                            |
-| `volume-callback`                   | error   | Prefer a callback for [`volume`](/docs/audio/volume).                                                                                                        |
-| `use-gif-component`                 | error   | Use the [`<Gif>`](/docs/gif) component for animated GIFs.                                                                                                    |
-| `staticfile-no-relative`            | error   | Do not pass relative or absolute paths to [`staticFile()`](/docs/staticfile).                                                                                |
-| `staticfile-no-remote`              | error   | Do not pass remote URLs to [`staticFile()`](/docs/staticfile).                                                                                               |
-| `no-background-image`               | error   | Do not use `background-image` in Remotion.                                                                                                                   |
-| `non-pure-animation`                | warn    | CSS `transition` and Tailwind transition classes may cause flickering.                                                                                       |
-| `slow-css-property`                 | warn    | GPU-heavy CSS properties such as `box-shadow`, `text-shadow` and `filter` may slow renders.                                                                  |
-| `v4-config-import`                  | error   | Import [`Config`](/docs/config) from [`@remotion/cli/config`](/docs/cli/cli) instead of `remotion`.                                                          |
-| `no-object-fit-on-media-video`      | warn    | Use the `objectFit` prop directly on [`<Video>`](/docs/media/video) instead of `style` or `className`.                                                       |
-| `valid-composition-and-folder-name` | error   | [`<Composition>`](/docs/composition) `id`s and [`<Folder>`](/docs/folder) `name`s may only contain allowed characters.                                       |
+| Rule                                | Severity | Description                                                                                                                                                  |
+| ----------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `warn-native-media-tag`             | error    | Prefer Remotion's [`<Img>`](/docs/img), [`<IFrame>`](/docs/iframe), [`<Audio>`](/docs/media/audio) and [`<Video>`](/docs/media/video) over native HTML tags. |
+| `deterministic-randomness`          | error    | [`Math.random()`](/docs/using-randomness) is not deterministic across frames. Use [`random()`](/docs/random) instead.                                        |
+| `no-string-assets`                  | error    | Do not reference local assets as strings. Use an import or [`staticFile()`](/docs/staticfile).                                                               |
+| `even-dimensions`                   | error    | Composition `width` and `height` should be divisible by 2 for H.264/H.265.                                                                                   |
+| `duration-in-frames`                | error    | `durationInFrames={Infinity}` on a [`<Sequence>`](/docs/sequence) is the default and can be removed.                                                         |
+| `from-0`                            | error    | `from={0}` on a [`<Sequence>`](/docs/sequence) is the default and can be removed.                                                                            |
+| `volume-callback`                   | error    | Prefer a callback for [`volume`](/docs/audio/volume).                                                                                                        |
+| `use-gif-component`                 | error    | Use the [`<Gif>`](/docs/gif) component for animated GIFs.                                                                                                    |
+| `staticfile-no-relative`            | error    | Do not pass relative or absolute paths to [`staticFile()`](/docs/staticfile).                                                                                |
+| `staticfile-no-remote`              | error    | Do not pass remote URLs to [`staticFile()`](/docs/staticfile).                                                                                               |
+| `no-background-image`               | error    | Do not use `background-image` in Remotion.                                                                                                                   |
+| `non-pure-animation`                | warn     | CSS `transition` and Tailwind transition classes may cause flickering.                                                                                       |
+| `v4-config-import`                  | error    | Import [`Config`](/docs/config) from [`@remotion/cli/config`](/docs/cli/cli) instead of `remotion`.                                                          |
+| `no-object-fit-on-media-video`      | warn     | Use the `objectFit` prop directly on [`<Video>`](/docs/media/video) instead of `style` or `className`.                                                       |
+| `valid-composition-and-folder-name` | error    | [`<Composition>`](/docs/composition) `id`s and [`<Folder>`](/docs/folder) `name`s may only contain allowed characters.                                       |
 
-Use `error` or `warn` in your config to override the default severity.
+You can also enable additional rules such as `slow-css-property` by name. Use `error` or `warn` in your config to override the recommended severity.
 
 ## Version support
 
