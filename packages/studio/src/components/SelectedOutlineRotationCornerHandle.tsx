@@ -83,6 +83,19 @@ export const SelectedOutlineRotationCornerHandle: React.FC<{
 		() => getSelectedOutlineRotationCornerInfo(outline.points, corner),
 		[corner, outline.points],
 	);
+	const handleSize = useMemo(() => {
+		if (outline.dimensions === null) {
+			return 12;
+		}
+
+		return Math.min(
+			12,
+			Math.max(
+				4,
+				Math.min(outline.dimensions.width, outline.dimensions.height) / 4,
+			),
+		);
+	}, [outline.dimensions]);
 
 	const onPointerDown = React.useCallback(
 		(event: React.PointerEvent<SVGCircleElement>) => {
@@ -337,7 +350,7 @@ export const SelectedOutlineRotationCornerHandle: React.FC<{
 				ref={circleRef}
 				cx={cornerInfo.point.x}
 				cy={cornerInfo.point.y}
-				r={12}
+				r={handleSize}
 				fill={TRANSPARENT}
 				stroke={TRANSPARENT}
 				vectorEffect="non-scaling-stroke"
