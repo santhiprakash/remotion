@@ -15,6 +15,8 @@ import {configOption} from './config';
 import {crfOption} from './crf';
 import {enableCrossSiteIsolationOption} from './cross-site-isolation';
 import {darkModeOption} from './dark-mode';
+import {defaultCodingAgentOption} from './default-coding-agent';
+import {defaultEditorOption} from './default-editor';
 import {deleteAfterOption} from './delete-after';
 import {disableGitSourceOption} from './disable-git-source';
 import {disableWebSecurityOption} from './disable-web-security';
@@ -26,6 +28,7 @@ import {encodingMaxRateOption} from './encoding-max-rate';
 import {enforceAudioOption} from './enforce-audio';
 import {envFileOption} from './env-file';
 import {everyNthFrameOption} from './every-nth-frame';
+import {experimentalKeepAudioContextAliveOption} from './experimental-keep-audio-context-alive';
 import {folderExpiryOption} from './folder-expiry';
 import {forSeamlessAacConcatenationOption} from './for-seamless-aac-concatenation';
 import {forceNewStudioOption} from './force-new-studio';
@@ -76,6 +79,7 @@ import {runsOption} from './runs';
 import {sampleRateOption} from './sample-rate';
 import {scaleOption} from './scale';
 import {separateAudioOption} from './separate-audio';
+import {skipSkillsOption} from './skip-skills';
 import {stillFrameOption} from './still-frame';
 import {stillImageFormatOption} from './still-image-format';
 import {throwIfSiteExistsOption} from './throw-if-site-exists';
@@ -151,6 +155,8 @@ export const allOptions = {
 	imageSequencePatternOption,
 	mediaCacheSizeInBytesOption,
 	darkModeOption,
+	defaultCodingAgentOption,
+	defaultEditorOption,
 	publicLicenseKeyOption,
 	isProductionOption,
 	askAIOption,
@@ -158,6 +164,7 @@ export const allOptions = {
 	keyboardShortcutsOption,
 	framesOption,
 	forceNewStudioOption,
+	experimentalKeepAudioContextAliveOption,
 	numberOfSharedAudioTagsOption,
 	ipv4Option,
 	stillImageFormatOption,
@@ -170,6 +177,7 @@ export const allOptions = {
 	rspackOption,
 	outDirOption,
 	packageManagerOption,
+	skipSkillsOption,
 	sampleRateOption,
 	webpackPollOption,
 	stillFrameOption,

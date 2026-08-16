@@ -1,6 +1,6 @@
 {
 	"name": "@remotion/effects",
-	"version": "4.0.496",
+	"version": "4.0.512",
 	"description": "Effects that can be applied to Remotion-based canvas components",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
@@ -69,6 +69,11 @@
 			"module": "./dist/esm/color-key.mjs",
 			"import": "./dist/esm/color-key.mjs"
 		},
+		"./color-correction": {
+			"types": "./dist/color-correction.d.ts",
+			"module": "./dist/esm/color-correction.mjs",
+			"import": "./dist/esm/color-correction.mjs"
+		},
 		"./brightness": {
 			"types": "./dist/brightness.d.ts",
 			"module": "./dist/esm/brightness.mjs",
@@ -103,6 +108,11 @@
 			"types": "./dist/evolve.d.ts",
 			"module": "./dist/esm/evolve.mjs",
 			"import": "./dist/esm/evolve.mjs"
+		},
+		"./exposure": {
+			"types": "./dist/exposure.d.ts",
+			"module": "./dist/esm/exposure.mjs",
+			"import": "./dist/esm/exposure.mjs"
 		},
 		"./fisheye": {
 			"types": "./dist/fisheye.d.ts",
@@ -189,6 +199,16 @@
 			"module": "./dist/esm/linear-progressive-pixelate.mjs",
 			"import": "./dist/esm/linear-progressive-pixelate.mjs"
 		},
+		"./levels": {
+			"types": "./dist/levels.d.ts",
+			"module": "./dist/esm/levels.mjs",
+			"import": "./dist/esm/levels.mjs"
+		},
+		"./light-leak": {
+			"types": "./dist/light-leak.d.ts",
+			"module": "./dist/esm/light-leak.mjs",
+			"import": "./dist/esm/light-leak.mjs"
+		},
 		"./light-trail": {
 			"types": "./dist/light-trail.d.ts",
 			"module": "./dist/esm/light-trail.mjs",
@@ -239,6 +259,11 @@
 			"module": "./dist/esm/radial-progressive-pixelate.mjs",
 			"import": "./dist/esm/radial-progressive-pixelate.mjs"
 		},
+		"./region-blur": {
+			"types": "./dist/region-blur.d.ts",
+			"module": "./dist/esm/region-blur.mjs",
+			"import": "./dist/esm/region-blur.mjs"
+		},
 		"./rings": {
 			"types": "./dist/rings.d.ts",
 			"module": "./dist/esm/rings.mjs",
@@ -259,6 +284,11 @@
 			"module": "./dist/esm/scale.mjs",
 			"import": "./dist/esm/scale.mjs"
 		},
+		"./shadows-highlights": {
+			"types": "./dist/shadows-highlights.d.ts",
+			"module": "./dist/esm/shadows-highlights.mjs",
+			"import": "./dist/esm/shadows-highlights.mjs"
+		},
 		"./shine": {
 			"types": "./dist/shine.d.ts",
 			"module": "./dist/esm/shine.mjs",
@@ -278,6 +308,11 @@
 			"types": "./dist/speckle.d.ts",
 			"module": "./dist/esm/speckle.mjs",
 			"import": "./dist/esm/speckle.mjs"
+		},
+		"./starburst": {
+			"types": "./dist/starburst.d.ts",
+			"module": "./dist/esm/starburst.mjs",
+			"import": "./dist/esm/starburst.mjs"
 		},
 		"./thermal-vision": {
 			"types": "./dist/thermal-vision.d.ts",
@@ -304,6 +339,11 @@
 			"module": "./dist/esm/venetian-blinds.mjs",
 			"import": "./dist/esm/venetian-blinds.mjs"
 		},
+		"./vibrance": {
+			"types": "./dist/vibrance.d.ts",
+			"module": "./dist/esm/vibrance.mjs",
+			"import": "./dist/esm/vibrance.mjs"
+		},
 		"./vignette": {
 			"types": "./dist/vignette.d.ts",
 			"module": "./dist/esm/vignette.mjs",
@@ -318,6 +358,11 @@
 			"types": "./dist/waves.d.ts",
 			"module": "./dist/esm/waves.mjs",
 			"import": "./dist/esm/waves.mjs"
+		},
+		"./white-balance": {
+			"types": "./dist/white-balance.d.ts",
+			"module": "./dist/esm/white-balance.mjs",
+			"import": "./dist/esm/white-balance.mjs"
 		},
 		"./white-noise": {
 			"types": "./dist/white-noise.d.ts",
@@ -359,6 +404,9 @@
 			"color-key": [
 				"dist/color-key.d.ts"
 			],
+			"color-correction": [
+				"dist/color-correction.d.ts"
+			],
 			"brightness": [
 				"dist/brightness.d.ts"
 			],
@@ -379,6 +427,9 @@
 			],
 			"evolve": [
 				"dist/evolve.d.ts"
+			],
+			"exposure": [
+				"dist/exposure.d.ts"
 			],
 			"fisheye": [
 				"dist/fisheye.d.ts"
@@ -431,6 +482,12 @@
 			"linear-progressive-pixelate": [
 				"dist/linear-progressive-pixelate.d.ts"
 			],
+			"levels": [
+				"dist/levels.d.ts"
+			],
+			"light-leak": [
+				"dist/light-leak.d.ts"
+			],
 			"light-trail": [
 				"dist/light-trail.d.ts"
 			],
@@ -461,6 +518,9 @@
 			"radial-progressive-pixelate": [
 				"dist/radial-progressive-pixelate.d.ts"
 			],
+			"region-blur": [
+				"dist/region-blur.d.ts"
+			],
 			"rings": [
 				"dist/rings.d.ts"
 			],
@@ -473,6 +533,9 @@
 			"scale": [
 				"dist/scale.d.ts"
 			],
+			"shadows-highlights": [
+				"dist/shadows-highlights.d.ts"
+			],
 			"shine": [
 				"dist/shine.d.ts"
 			],
@@ -484,6 +547,9 @@
 			],
 			"speckle": [
 				"dist/speckle.d.ts"
+			],
+			"starburst": [
+				"dist/starburst.d.ts"
 			],
 			"thermal-vision": [
 				"dist/thermal-vision.d.ts"
@@ -500,6 +566,9 @@
 			"venetian-blinds": [
 				"dist/venetian-blinds.d.ts"
 			],
+			"vibrance": [
+				"dist/vibrance.d.ts"
+			],
 			"vignette": [
 				"dist/vignette.d.ts"
 			],
@@ -511,6 +580,9 @@
 			],
 			"zigzag": [
 				"dist/zigzag.d.ts"
+			],
+			"white-balance": [
+				"dist/white-balance.d.ts"
 			],
 			"white-noise": [
 				"dist/white-noise.d.ts"

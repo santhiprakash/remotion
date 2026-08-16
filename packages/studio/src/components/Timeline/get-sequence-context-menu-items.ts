@@ -1,7 +1,16 @@
+import type {DefaultCodingAgent} from '@remotion/renderer';
+import type {
+	EditorPickerId,
+	GetDefaultCodingAgentInfoResponse,
+	GetDefaultEditorInfoResponse,
+} from '@remotion/studio-shared';
 import type {ResolvedStackLocation, TSequence} from 'remotion';
 import {NoReactInternals} from 'remotion/no-react';
+import {formatContextForAgents} from '../../helpers/format-file-location';
+import {getOpenInMenuItems} from '../get-open-in-menu-items';
 import type {ComboboxValue} from '../NewComposition/ComboBox';
 import {showNotification} from '../Notifications/NotificationCenter';
+import {openInFileExplorer} from '../RenderQueue/actions';
 import type {TimelineAssetLinkInfo} from './timeline-asset-link';
 import {openTimelineAssetLink} from './timeline-asset-link';
 
@@ -34,11 +43,15 @@ export const getSequenceContextMenuItems = ({
 	deleteDisabled,
 	disableInteractivityDisabled,
 	duplicateDisabled,
-	fileLocation,
+	isProgrammaticallyDuplicated,
 	includeSourceEditItems,
+	codingAgentInfo,
+	editorInfo,
+	onConfigureApps,
 	onDeleteSequenceFromSource,
 	onDisableSequenceInteractivity,
 	onDuplicateSequenceFromSource,
+	openInCodingAgent,
 	openInEditor,
 	originalLocation,
 	selectAsset,
@@ -50,21 +63,79 @@ export const getSequenceContextMenuItems = ({
 	readonly deleteDisabled: boolean;
 	readonly disableInteractivityDisabled: boolean;
 	readonly duplicateDisabled: boolean;
-	readonly fileLocation: string | null;
+	readonly isProgrammaticallyDuplicated: boolean;
 	readonly includeSourceEditItems: boolean;
+	readonly codingAgentInfo: GetDefaultCodingAgentInfoResponse | null;
+	readonly editorInfo: GetDefaultEditorInfoResponse | null;
+	readonly onConfigureApps: (() => void) | null;
 	readonly onDeleteSequenceFromSource: () => void;
 	readonly onDisableSequenceInteractivity: () => void;
 	readonly onDuplicateSequenceFromSource: () => void;
-	readonly openInEditor: () => void;
+	readonly openInCodingAgent: (
+		codingAgentId: DefaultCodingAgent,
+		codingAgentName: string,
+		contextForAgents: string | null,
+	) => void;
+	readonly openInEditor: (editorId: EditorPickerId | null) => void;
 	readonly originalLocation: ResolvedStackLocation | null;
 	readonly selectAsset: (src: string) => void;
 	readonly sequence: TSequence;
 	readonly sourceActions?: readonly ComboboxValue[];
 }): ComboboxValue[] => {
 	const editorName = window.remotion_editorName;
-	const {documentationLink} = sequence;
 	const isInteractiveSvg =
 		sequence.controls?.componentIdentity === interactiveSvgComponentIdentity;
+	const installedEditors = editorInfo?.installedEditors ?? [];
+	const defaultEditorId =
+		installedEditors.find((editor) => editor.nameWithType === editorName)?.id ??
+		null;
+	const defaultCodingAgent = codingAgentInfo?.installedCodingAgents.find(
+		(codingAgent) => codingAgent.id === codingAgentInfo.defaultCodingAgent,
+	);
+	const contextForAgents = formatContextForAgents({
+		location: originalLocation,
+		name: sequence.displayName || sequence.controls?.componentName || null,
+		root: window.remotion_cwd,
+	});
+	const openInCodingAgentWithContext = (
+		codingAgentId: DefaultCodingAgent,
+		codingAgentName: string,
+	) => {
+		openInCodingAgent(
+			codingAgentId,
+			codingAgentName,
+			codingAgentId === 'copilot' ? null : contextForAgents,
+		);
+	};
+
+	const openInMenuItems = onConfigureApps
+		? getOpenInMenuItems({
+				codingAgentInfo,
+				editorDisabled: !canOpenInEditor || !originalLocation,
+				editorInfo,
+				excludeCodingAgentId: defaultCodingAgent?.id ?? null,
+				excludeEditorId: defaultEditorId,
+				fileManagerDisabled: !originalLocation?.source,
+				folder: false,
+				location: originalLocation,
+				onConfigureApps,
+				onOpenInCodingAgent: openInCodingAgentWithContext,
+				onOpenInEditor: openInEditor,
+				onOpenInFileExplorer: () => {
+					if (!originalLocation?.source) {
+						return;
+					}
+
+					openInFileExplorer({directory: originalLocation.source}).catch(
+						(err) => {
+							showNotification(`Could not open file: ${err.message}`, 2000);
+						},
+					);
+				},
+				onOpenInGitClient: () => undefined,
+				onOpenInTerminal: null,
+			})
+		: [];
 
 	const items = [
 		editorName
@@ -75,56 +146,71 @@ export const getSequenceContextMenuItems = ({
 					label: `Open in ${editorName}`,
 					leftItem: null,
 					disabled: !canOpenInEditor || !originalLocation,
-					onClick: openInEditor,
+					onClick: () => openInEditor(null),
 					quickSwitcherLabel: null,
 					subMenu: null,
 					value: 'open-in-editor',
 				}
 			: null,
+		defaultCodingAgent
+			? {
+					type: 'item' as const,
+					id: 'open-in-default-coding-agent',
+					keyHint: null,
+					label: `Open in ${defaultCodingAgent.nameWithType}`,
+					leftItem: null,
+					disabled: false,
+					onClick: () =>
+						openInCodingAgentWithContext(
+							defaultCodingAgent.id,
+							defaultCodingAgent.nameWithType,
+						),
+					quickSwitcherLabel: null,
+					subMenu: null,
+					value: 'open-in-default-coding-agent',
+				}
+			: null,
+		onConfigureApps
+			? {
+					type: 'item' as const,
+					id: 'open-in-another-app',
+					keyHint: null,
+					label: 'Open in...',
+					leftItem: null,
+					disabled: false,
+					onClick: () => undefined,
+					quickSwitcherLabel: null,
+					subMenu: {
+						items: openInMenuItems,
+						leaveLeftSpace: true,
+						preselectIndex: false as const,
+					},
+					value: 'open-in-another-app',
+				}
+			: null,
 		{
 			type: 'item' as const,
-			id: 'copy-file-location',
+			id: 'copy-context-for-agents',
 			keyHint: null,
-			label: 'Copy file location',
+			label: 'Copy context for agents',
 			leftItem: null,
-			disabled: !fileLocation,
+			disabled: !contextForAgents,
 			onClick: () => {
-				if (!fileLocation) {
+				if (!contextForAgents) {
 					return;
 				}
 
-				navigator.clipboard
-					.writeText(fileLocation)
-					.then(() => {
-						showNotification('Copied file location to clipboard', 1000);
-					})
-					.catch((err) => {
-						showNotification(
-							`Could not copy to clipboard: ${(err as Error).message}`,
-							1000,
-						);
-					});
+				navigator.clipboard.writeText(contextForAgents).catch((err) => {
+					showNotification(
+						`Could not copy to clipboard: ${(err as Error).message}`,
+						1000,
+					);
+				});
 			},
 			quickSwitcherLabel: null,
 			subMenu: null,
-			value: 'copy-file-location',
+			value: 'copy-context-for-agents',
 		},
-		documentationLink
-			? {
-					type: 'item' as const,
-					id: 'open-component-docs',
-					keyHint: null,
-					label: 'Open component docs',
-					leftItem: null,
-					disabled: false,
-					onClick: () => {
-						window.open(documentationLink, '_blank', 'noopener,noreferrer');
-					},
-					quickSwitcherLabel: null,
-					subMenu: null,
-					value: 'open-component-docs',
-				}
-			: null,
 		assetLinkInfo
 			? {
 					type: 'item' as const,
@@ -141,7 +227,7 @@ export const getSequenceContextMenuItems = ({
 					value: 'show-asset',
 				}
 			: null,
-		documentationLink || assetLinkInfo
+		assetLinkInfo
 			? {
 					type: 'divider' as const,
 					id: 'sequence-link-divider',
@@ -191,18 +277,20 @@ export const getSequenceContextMenuItems = ({
 				}
 			: null,
 		...sourceActions,
-		{
-			type: 'item' as const,
-			id: 'disable-interactivity',
-			keyHint: null,
-			label: 'Disable interactivity',
-			leftItem: null,
-			disabled: disableInteractivityDisabled,
-			onClick: onDisableSequenceInteractivity,
-			quickSwitcherLabel: null,
-			subMenu: null,
-			value: 'disable-interactivity',
-		},
+		includeSourceEditItems
+			? {
+					type: 'item' as const,
+					id: 'disable-interactivity',
+					keyHint: null,
+					label: 'Disable interactivity',
+					leftItem: null,
+					disabled: disableInteractivityDisabled,
+					onClick: onDisableSequenceInteractivity,
+					quickSwitcherLabel: null,
+					subMenu: null,
+					value: 'disable-interactivity',
+				}
+			: null,
 		includeSourceEditItems
 			? {
 					type: 'item' as const,
@@ -210,7 +298,7 @@ export const getSequenceContextMenuItems = ({
 					keyHint: null,
 					label: 'Duplicate',
 					leftItem: null,
-					disabled: duplicateDisabled,
+					disabled: duplicateDisabled || isProgrammaticallyDuplicated,
 					onClick: onDuplicateSequenceFromSource,
 					quickSwitcherLabel: null,
 					subMenu: null,
@@ -228,7 +316,7 @@ export const getSequenceContextMenuItems = ({
 					type: 'item' as const,
 					id: 'delete-sequence',
 					keyHint: null,
-					label: 'Delete',
+					label: isProgrammaticallyDuplicated ? 'Delete all' : 'Delete',
 					leftItem: null,
 					disabled: deleteDisabled,
 					onClick: onDeleteSequenceFromSource,

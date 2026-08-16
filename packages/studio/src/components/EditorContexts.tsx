@@ -15,6 +15,7 @@ import {ModalsProvider} from './ModalsProvider';
 import {ClientRenderQueueProcessor} from './RenderQueue/ClientRenderQueueProcessor';
 import {RenderQueueContextProvider} from './RenderQueue/context';
 import {SetTimelineInOutProvider} from './SetTimelineInOutProvider';
+import {SettingsProvider} from './SettingsContext';
 import {ShowGuidesProvider} from './ShowGuidesProvider';
 import {ShowOutlinesProvider} from './ShowOutlinesProvider';
 import {ShowRulersProvider} from './ShowRulersProvider';
@@ -24,51 +25,52 @@ import {ZoomGesturesProvider} from './ZoomGesturesProvider';
 
 export const EditorContexts: React.FC<{
 	readonly children: React.ReactNode;
-	readonly readOnlyStudio: boolean;
-}> = ({children, readOnlyStudio}) => {
+}> = ({children}) => {
 	return (
 		<ZodProvider>
 			<VisualControlsProvider>
-				<PreviewServerConnection readOnlyStudio={readOnlyStudio}>
-					<VisualControlsUndoSync />
-					<RenderQueueContextProvider>
-						<ClientRenderQueueProcessor />
-						<KeybindingContextProvider>
-							<CheckerboardProvider>
-								<ZoomGesturesProvider>
-									<ShowRulersProvider>
-										<ShowGuidesProvider>
-											<ShowOutlinesProvider>
-												<SnappingProvider>
-													<PreviewSizeProvider>
-														<ModalsProvider>
-															<MediaVolumeProvider>
-																<PlayerInternals.PlayerEmitterProvider
-																	currentPlaybackRate={null}
-																>
-																	<SidebarContextProvider>
-																		<FolderContextProvider>
-																			<HighestZIndexProvider>
-																				<SetTimelineInOutProvider>
-																					<ExpandedTracksProvider>
-																						{children}
-																					</ExpandedTracksProvider>
-																				</SetTimelineInOutProvider>
-																			</HighestZIndexProvider>
-																		</FolderContextProvider>
-																	</SidebarContextProvider>
-																</PlayerInternals.PlayerEmitterProvider>
-															</MediaVolumeProvider>
-														</ModalsProvider>
-													</PreviewSizeProvider>
-												</SnappingProvider>
-											</ShowOutlinesProvider>
-										</ShowGuidesProvider>
-									</ShowRulersProvider>
-								</ZoomGesturesProvider>
-							</CheckerboardProvider>
-						</KeybindingContextProvider>
-					</RenderQueueContextProvider>
+				<PreviewServerConnection>
+					<SettingsProvider>
+						<VisualControlsUndoSync />
+						<RenderQueueContextProvider>
+							<ClientRenderQueueProcessor />
+							<KeybindingContextProvider>
+								<CheckerboardProvider>
+									<ZoomGesturesProvider>
+										<ShowRulersProvider>
+											<ShowGuidesProvider>
+												<ShowOutlinesProvider>
+													<SnappingProvider>
+														<PreviewSizeProvider>
+															<ModalsProvider>
+																<MediaVolumeProvider>
+																	<PlayerInternals.PlayerEmitterProvider
+																		currentPlaybackRate={null}
+																	>
+																		<SidebarContextProvider>
+																			<FolderContextProvider>
+																				<HighestZIndexProvider>
+																					<SetTimelineInOutProvider>
+																						<ExpandedTracksProvider>
+																							{children}
+																						</ExpandedTracksProvider>
+																					</SetTimelineInOutProvider>
+																				</HighestZIndexProvider>
+																			</FolderContextProvider>
+																		</SidebarContextProvider>
+																	</PlayerInternals.PlayerEmitterProvider>
+																</MediaVolumeProvider>
+															</ModalsProvider>
+														</PreviewSizeProvider>
+													</SnappingProvider>
+												</ShowOutlinesProvider>
+											</ShowGuidesProvider>
+										</ShowRulersProvider>
+									</ZoomGesturesProvider>
+								</CheckerboardProvider>
+							</KeybindingContextProvider>
+						</RenderQueueContextProvider>
+					</SettingsProvider>
 				</PreviewServerConnection>
 			</VisualControlsProvider>
 		</ZodProvider>

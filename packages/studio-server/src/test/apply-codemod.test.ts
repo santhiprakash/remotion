@@ -165,6 +165,7 @@ test('formats precise log messages for all codemods', () => {
 		{
 			codemod: {
 				type: 'new-composition',
+				canvasCapture: null,
 				newId: 'FreshVideo',
 				componentName: 'FreshVideo',
 				componentImportPath: './FreshVideo',
@@ -321,6 +322,9 @@ const getHandlerOptions = <T>({
 	},
 	publicDir: remotionRoot,
 	binariesDirectory: null,
+	configFile: null,
+	getDefaultCodingAgent: () => null,
+	getDefaultEditor: () => null,
 });
 
 const runCompositionCodemodUndoRedoTest = async ({
@@ -623,6 +627,7 @@ test('applyCodemodHandler creates new composition files with undo and redo', asy
 				input: {
 					codemod: {
 						type: 'new-composition',
+						canvasCapture: null,
 						newId: 'FreshVideo',
 						componentName: 'FreshVideo',
 						componentImportPath: './FreshVideo',
@@ -679,11 +684,122 @@ test('applyCodemodHandler creates new composition files with undo and redo', asy
 	}
 });
 
+test('applyCodemodHandler creates an interactive Canvas Capture composition', async () => {
+	const remotionRoot = mkdtempSync(path.join(tmpdir(), 'remotion-codemod-'));
+	const cleanupFileWatcher = setFileWatcherRegistry(
+		createFileWatcherRegistry(),
+	);
+	const cleanupLiveEvents = setLiveEventsListener({
+		sendEventToClient: () => undefined,
+		sendEventToClientId: () => true,
+		router: () => Promise.resolve(),
+		closeConnections: () => Promise.resolve(),
+		addNewClientListener: () => () => undefined,
+	});
+
+	try {
+		clearUndoRedoStacks();
+		const entryPoint = path.join(remotionRoot, 'Root.tsx');
+		const componentFile = path.join(remotionRoot, 'FreshCapture.tsx');
+		writeFileSync(entryPoint, rootContents);
+
+		const applyResponse = await applyCodemodHandler(
+			getHandlerOptions({
+				input: {
+					codemod: {
+						type: 'new-composition',
+						canvasCapture: {
+							videoFileName: 'capture.mp4',
+							videoHeight: 1080,
+							videoWidth: 1920,
+							keyframeFps: 30,
+							data: {
+								captureMetadata: {density: 2},
+								mouseMovements: [
+									{
+										timeInSeconds: 0,
+										canvasX: 10,
+										canvasY: 20,
+										cursor:
+											'url("data:image/svg+xml,%3Csvg%20width%3D%2224%22%2F%3E") 6 7, alias',
+									},
+									{
+										timeInSeconds: 1,
+										canvasX: 30,
+										canvasY: 40,
+										cursor: 'pointer',
+									},
+								],
+								pointerClicks: [
+									{timeInSeconds: 0.5, type: 'pointer-down'},
+									{timeInSeconds: 0.75, type: 'pointer-up'},
+								],
+							},
+						},
+						newId: 'FreshCapture',
+						componentName: 'FreshCapture',
+						componentImportPath: './FreshCapture',
+						folderName: null,
+						parentName: null,
+						newDurationInFrames: 90,
+						newFps: 30,
+						newHeight: 720,
+						newWidth: 1280,
+					} satisfies RecastCodemod,
+					dryRun: false,
+					symbolicatedStack: {
+						originalFunctionName: null,
+						originalFileName: 'Root.tsx',
+						originalLineNumber: 9,
+						originalColumnNumber: 4,
+						originalScriptCode: null,
+					},
+				},
+				entryPoint,
+				remotionRoot,
+			}),
+		);
+
+		expect(applyResponse.success).toBe(true);
+		expect(readFileSync(entryPoint, 'utf-8')).toContain(
+			"import {FreshCapture} from './FreshCapture'",
+		);
+		expect(readFileSync(entryPoint, 'utf-8')).toContain('<FreshCapture />');
+		const componentContents = readFileSync(componentFile, 'utf-8');
+		expect(componentContents).toContain(
+			"import {MacOSCursor} from '@remotion/mac-cursors'",
+		);
+		expect(componentContents).toContain('customCursor={');
+		expect(componentContents).toContain(
+			'url("data:image/svg+xml,%3Csvg%20width%3D%2224%22%2F%3E") 6 7, alias',
+		);
+		expect(componentContents).toContain("src={staticFile('capture.mp4')}");
+		expect(componentContents).toContain('width: 1920');
+		expect(componentContents).toContain('height: 1080');
+		expect(componentContents).toContain('id="FreshCapture"');
+		expect(componentContents).toContain('width={1280}');
+		expect(componentContents).toContain('height={720}');
+
+		const undoResponse = await undoHandler(
+			getHandlerOptions({input: {}, entryPoint, remotionRoot}),
+		);
+		expect(undoResponse.success).toBe(true);
+		expect(readFileSync(entryPoint, 'utf-8')).toBe(rootContents);
+		expect(existsSync(componentFile)).toBe(false);
+	} finally {
+		clearUndoRedoStacks();
+		cleanupLiveEvents();
+		cleanupFileWatcher();
+		rmSync(remotionRoot, {recursive: true, force: true});
+	}
+});
+
 test('creates a composition in a top-level folder', () => {
 	const {changesMade, newContents} = parseAndApplyCodemod({
 		input: folderRootContents,
 		codeMod: {
 			type: 'new-composition',
+			canvasCapture: null,
 			newId: 'FreshVideo',
 			componentName: 'FreshVideo',
 			componentImportPath: './FreshVideo',
@@ -712,6 +828,7 @@ test('creates a composition in a nested folder by parent path', () => {
 		input: folderRootContents,
 		codeMod: {
 			type: 'new-composition',
+			canvasCapture: null,
 			newId: 'FreshVideo',
 			componentName: 'FreshVideo',
 			componentImportPath: './FreshVideo',
@@ -779,6 +896,7 @@ test('creates a composition in a self-closing folder', () => {
 		input: selfClosingFolderRootContents,
 		codeMod: {
 			type: 'new-composition',
+			canvasCapture: null,
 			newId: 'FreshVideo',
 			componentName: 'FreshVideo',
 			componentImportPath: './FreshVideo',

@@ -12,6 +12,10 @@ createRoot(root).render(
 	<BrowserStudio
 		iframeSrc="/frame.html"
 		project={createBlankTemplateProject()}
-		readOnly
+		readOnly={false}
+		workspacePackageBaseUrl={
+			new URL('/__remotion_browser_studio_workspace__/', window.location.href)
+				.href
+		}
 	/>,
 );

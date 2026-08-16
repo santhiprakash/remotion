@@ -11,7 +11,11 @@ import {
 	DEFAULT_MAX_RETRIES,
 	DEFAULT_OUTPUT_PRIVACY,
 } from '@remotion/lambda-client/constants';
-import type {ChromiumOptions, LogLevel} from '@remotion/renderer';
+import type {
+	ChromiumOptions,
+	LogLevel,
+	SingleFrameRange,
+} from '@remotion/renderer';
 import {RenderInternals} from '@remotion/renderer';
 import {BrowserSafeApis} from '@remotion/renderer/client';
 import type {EnhancedErrorInfo, ProviderSpecifics} from '@remotion/serverless';
@@ -104,11 +108,22 @@ export const renderCommand = async ({
 
 	const region = getAwsRegion();
 
-	const {envVariables, frameRange, inputProps} = CliInternals.getCliOptions({
-		isStill: false,
-		logLevel,
-		indent: false,
-	});
+	const {envVariables, frameRange, inputProps, selectedFrames} =
+		CliInternals.getCliOptions({
+			isStill: false,
+			logLevel,
+			indent: false,
+		});
+	if (
+		selectedFrames !== null ||
+		(Array.isArray(frameRange) && Array.isArray(frameRange[0]))
+	) {
+		throw new Error(
+			'Comma-separated frame selections are only supported by the local `remotion render` command. Pass one frame range to render a video on Lambda.',
+		);
+	}
+
+	const singleFrameRange = frameRange as SingleFrameRange | null;
 
 	const height = overrideHeightOption.getValue({
 		commandLine: CliInternals.parsedCli,
@@ -385,7 +400,7 @@ export const renderCommand = async ({
 		concurrency: concurrency ?? null,
 		privacy,
 		logLevel,
-		frameRange: frameRange ?? null,
+		frameRange: singleFrameRange,
 		outName: resolvedOutName,
 		timeoutInMilliseconds,
 		chromiumOptions,
@@ -446,13 +461,13 @@ export const renderCommand = async ({
 	Log.info(
 		{indent: false, logLevel},
 		CliInternals.chalk.gray(
-			`Bucket: ${CliInternals.makeHyperlink({text: res.bucketName, fallback: res.bucketName, url: `https://${getAwsRegion()}.console.aws.amazon.com/s3/buckets/${res.bucketName}/?region=${getAwsRegion()}`})}`,
+			`Bucket: ${CliInternals.makeHyperlink({text: res.bucketName, fallback: res.bucketName, url: LambdaClientInternals.getS3BucketUrl({region: getAwsRegion(), bucketName: res.bucketName})})}`,
 		),
 	);
 	Log.info(
 		{indent: false, logLevel},
 		CliInternals.chalk.gray(
-			`Function: ${CliInternals.makeHyperlink({text: functionName, fallback: functionName, url: `https://${getAwsRegion()}.console.aws.amazon.com/lambda/home#/functions/${functionName}?tab=code`})}`,
+			`Function: ${CliInternals.makeHyperlink({text: functionName, fallback: functionName, url: LambdaClientInternals.getLambdaFunctionUrl({region: getAwsRegion(), functionName})})}`,
 		),
 	);
 	Log.info(

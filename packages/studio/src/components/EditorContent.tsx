@@ -1,5 +1,6 @@
 import React, {useCallback, useContext} from 'react';
 import {Internals} from 'remotion';
+import {Transform3DModeStateProvider} from '../state/transform-3d-mode';
 import {GlobalKeybindings} from './GlobalKeybindings';
 import {InitialCompositionLoader} from './InitialCompositionLoader';
 import {MenuToolbar} from './MenuToolbar';
@@ -63,6 +64,10 @@ export const EditorContent: React.FC<{
 			maxFlex={0.9}
 			minFlex={0.2}
 			defaultFlex={0.75}
+			maxFlexerSize={null}
+			minFlexerSize={null}
+			maxAntiFlexerSize={null}
+			minAntiFlexerSize={null}
 		>
 			<SplitterElement sticky={null} type="flexer">
 				{children}
@@ -76,14 +81,16 @@ export const EditorContent: React.FC<{
 
 	return (
 		<TimelineSelectionProvider>
-			<StudioClearSelectionArea>
-				<InitialCompositionLoader />
-				<MenuToolbar readOnlyStudio={readOnlyStudio} />
-				<GlobalKeybindings />
-				<TimelineKeyframeDragStateProvider>
-					{content}
-				</TimelineKeyframeDragStateProvider>
-			</StudioClearSelectionArea>
+			<Transform3DModeStateProvider>
+				<StudioClearSelectionArea>
+					<InitialCompositionLoader />
+					<MenuToolbar readOnlyStudio={readOnlyStudio} />
+					<GlobalKeybindings />
+					<TimelineKeyframeDragStateProvider>
+						{content}
+					</TimelineKeyframeDragStateProvider>
+				</StudioClearSelectionArea>
+			</Transform3DModeStateProvider>
 		</TimelineSelectionProvider>
 	);
 };

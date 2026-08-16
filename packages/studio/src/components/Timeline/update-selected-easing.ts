@@ -1,5 +1,6 @@
 import {
 	canEditEasingForInterpolationFunction,
+	isSchemaFieldHoldOnly,
 	LINEAR_KEYFRAME_EASING,
 } from '@remotion/studio-shared';
 export {canEditEasingForInterpolationFunction} from '@remotion/studio-shared';
@@ -14,10 +15,7 @@ import type {
 	TSequence,
 } from 'remotion';
 import {Internals} from 'remotion';
-import {
-	callUpdateEffectKeyframeSettings,
-	callUpdateSequenceKeyframeSettings,
-} from './call-update-keyframe-settings';
+import {callBatchUpdateKeyframeSettings} from './call-update-keyframe-settings';
 import {findTrackForNodePathInfo} from './find-track-for-node-path-info';
 import {parseKeyframeFieldFromNodePath} from './parse-keyframe-field-from-node-path';
 import type {SetPropStatuses} from './save-sequence-prop';
@@ -97,6 +95,10 @@ export const getSelectedEasingUpdate = ({
 		)?.[field.fieldKey];
 		if (
 			sequencePropStatus?.status !== 'keyframed' ||
+			isSchemaFieldHoldOnly({
+				schema: sequence.controls.schema,
+				key: field.fieldKey,
+			}) ||
 			!canEditEasingForInterpolationFunction(
 				sequencePropStatus.interpolationFunction,
 			)
@@ -134,6 +136,10 @@ export const getSelectedEasingUpdate = ({
 			: null;
 	if (
 		effectPropStatus?.status !== 'keyframed' ||
+		isSchemaFieldHoldOnly({
+			schema: effect.schema,
+			key: field.fieldKey,
+		}) ||
 		!canEditEasingForInterpolationFunction(
 			effectPropStatus.interpolationFunction,
 		)
@@ -265,36 +271,35 @@ export const updateSelectedTimelineEasings = ({
 		return null;
 	}
 
-	return Promise.all(
-		updates.map((update) => {
-			const settings = {
-				type: 'easing' as const,
-				segmentIndex: update.segmentIndex,
-				easing,
-			};
-
-			if (update.type === 'sequence') {
-				return callUpdateSequenceKeyframeSettings({
-					fileName: update.fileName,
-					nodePath: update.nodePath,
-					fieldKey: update.fieldKey,
-					settings,
-					schema: update.schema,
-					setPropStatuses,
-					clientId,
-				});
-			}
-
-			return callUpdateEffectKeyframeSettings({
+	return callBatchUpdateKeyframeSettings({
+		sequenceKeyframes: updates
+			.filter((update) => update.type === 'sequence')
+			.map((update) => ({
+				fileName: update.fileName,
+				nodePath: update.nodePath,
+				fieldKey: update.fieldKey,
+				settings: {
+					type: 'easing',
+					segmentIndex: update.segmentIndex,
+					easing,
+				},
+				schema: update.schema,
+			})),
+		effectKeyframes: updates
+			.filter((update) => update.type === 'effect')
+			.map((update) => ({
 				fileName: update.fileName,
 				nodePath: update.nodePath,
 				effectIndex: update.effectIndex,
 				fieldKey: update.fieldKey,
-				settings,
+				settings: {
+					type: 'easing',
+					segmentIndex: update.segmentIndex,
+					easing,
+				},
 				schema: update.schema,
-				setPropStatuses,
-				clientId,
-			});
-		}),
-	).then(() => undefined);
+			})),
+		setPropStatuses,
+		clientId,
+	});
 };

@@ -11,16 +11,17 @@ import {
 import {z} from 'zod';
 import {TwentyTwoKHzAudio} from './22KhzAudio';
 import {UseanimatedEmojis} from './AnimatedEmojis';
+import {BarChart} from './BarChart';
 import BetaText, {betaTextSchema} from './BetaText';
 import {NativeBufferStateForImage} from './BufferState/Image';
 import {NativeBufferState} from './BufferState/Simple';
 import {NativeBufferStateForVideo} from './BufferState/Video';
 import {CancelRender} from './CancelRender';
 import {
-	AnimatedCaptions,
 	CAPTIONS_DURATION_IN_FRAMES,
 	CAPTIONS_HEIGHT,
 } from './CaptionsTester/AnimatedCaptions';
+import {AnimatedCaptionsComposition} from './CaptionsTester/AnimatedCaptionsComposition';
 import {ClassSerialization} from './ClassSerialization';
 import {ColorInterpolation} from './ColorInterpolation';
 import {ComplexSounds} from './ComplexSounds';
@@ -38,11 +39,13 @@ import {
 	DiscriminatedUnionSchemaTest,
 	discriminatedUnionRootSchema,
 } from './DiscriminatedUnionSchemaTest';
+import {DragAndDropExample} from './DragAndDrop';
 import {DynamicDuration, dynamicDurationSchema} from './DynamicDuration';
 import {EasingVisualizer} from './EasingVisualizer/EasingVisualizer';
 import {EffectCopySource, EffectCopyTarget} from './EffectCopyTestbed';
 import {EmojiTestbed} from './Emoji';
 import {ErrorOnFrame10} from './ErrorOnFrame10';
+import {UnsymbolicatedErrorOverlayRepro} from './ErrorOverlayE2e/ErrorOverlayRepro';
 import {Expert} from './Expert';
 import {FontDemo} from './Fonts';
 import {FractionalSequenceVideo} from './FractionalSequenceVideo';
@@ -102,6 +105,10 @@ import {ManyAudio} from './ManyAudio';
 import {HandleAudioRenderError} from './MediaErrorHandling/HandleAudioRenderError';
 import {InfiniteAudio} from './MediaErrorHandling/InfiniteAudio';
 import {MissingImg} from './MissingImg';
+import {ClosingScene} from './MultiSceneSample/ClosingScene';
+import {FeatureScene} from './MultiSceneSample/FeatureScene';
+import {MultiSceneVideo} from './MultiSceneSample/MultiSceneVideo';
+import {OpeningScene} from './MultiSceneSample/OpeningScene';
 import {OffthreadRemoteVideo} from './OffthreadRemoteVideo/OffthreadRemoteVideo';
 import {OffthreadVideoToCanvas} from './OffthreadVideoToCanvas';
 import {OrbScene} from './Orb';
@@ -124,6 +131,7 @@ import {ScalePath} from './ScalePath';
 import {SchemaTest, schemaTestSchema} from './SchemaTest';
 import {Scripts} from './Scripts';
 import {WidthHeightSequences} from './Sequence/WidthHeightSequences';
+import {SequenceCropTest} from './SequenceCropTest';
 import CircleTest from './Shapes/CircleTest';
 import EllipseTest from './Shapes/EllipseTest';
 import RectTest from './Shapes/RectTest';
@@ -149,8 +157,8 @@ import {
 } from './StudioApis/SaveDefaultProps';
 import {TriggerCalculateMetadata} from './StudioApis/TriggerCalculateMetadata';
 import {WriteStaticFile} from './StudioApis/WriteStaticFile';
-import './style.css';
 import {SubtitleArtifact} from './SubtitleArtifact/SubtitleArtifact';
+import './style.css';
 import {SvgFilter} from './SvgFilter';
 import {Tailwind} from './Tailwind';
 import {TenFrameTester} from './TenFrameTester';
@@ -158,16 +166,22 @@ import {TextStroke} from './TextStroke';
 import ThreeBasic from './ThreeBasic';
 import {ThreeHtml} from './ThreeHtml/ThreeHtml';
 import {VideoTextureDemo} from './ThreeScene/Scene';
+import {ThreeWebGPU} from './ThreeWebGPU';
 import {Timeout} from './Timeout';
 import {FitText, fitTextSchema} from './Title/FitText';
 import {AudioTransition} from './Transitions/AudioTransition';
 import {BasicTransition} from './Transitions/BasicTransition';
 import {CustomTransition} from './Transitions/CustomTransition';
+import {
+	PUSH_CUT_DEMO_DURATION_IN_FRAMES,
+	PushCutDemo,
+} from './Transitions/PushCutDemo';
 import {VideoOnCanvas} from './VideoOnCanvas';
 import {Greenscreen} from './VideoOnCanvas/greenscreen';
 import {VideoParser} from './VideoParser';
 import {VideoSpeed} from './VideoSpeed';
 import {VideoTesting} from './VideoTesting';
+import {VisualMode3D} from './VisualMode3D';
 import {WarpDemoOuter} from './WarpText';
 import {WarpDemo2} from './WarpText/demo2';
 import {WatchStaticDemo} from './watch-static';
@@ -183,7 +197,6 @@ const INCLUDE_COMP_BREAKING_GET_COMPOSITIONS = false;
 
 import {parseMedia} from '@remotion/media-parser';
 import {zMatrix} from '@remotion/zod-types';
-import {ThreeDCheck} from './3DCheck';
 import {ThreeDContext} from './3DContext';
 import {ThreeDSvgContent} from './3DSvgContent';
 import {AnimatedImages} from './AnimatedImage/Avif';
@@ -220,6 +233,7 @@ import {JumpCuts, SAMPLE_SECTIONS, calculateMetadataJumpCuts} from './JumpCuts';
 import {LightLeakExample} from './LightLeak';
 import {LightLeakAnimatedSize} from './LightLeak/AnimatedSize';
 import {LoopDisplayTestComp} from './LoopDisplayTest';
+import {MacCursorsExample} from './MacCursors';
 import {MediaTimelineTestbed} from './MediaTimelineTestbed';
 import {NewAudioExample} from './NewAudio/NewAudio';
 import {NewVideoComp, PremountSequenceVideoComp} from './NewVideo';
@@ -286,6 +300,8 @@ import {
 	InteractiveSvgElements,
 } from './VisualModeTests/InteractiveComponents';
 import {Issue9170} from './VisualModeTests/Issue9170';
+import {OutlineSelectionCases} from './VisualModeTests/OutlineSelectionCases';
+import {SvgPaintSchema} from './VisualModeTests/SvgPaintSchema';
 import {VideoConfigExpressions} from './VisualModeTests/VideoConfigExpressions';
 import {VoiceVisualization} from './voice-visualization';
 import {WhisperWeb} from './WhisperWeb';
@@ -414,8 +430,32 @@ export const Index: React.FC = () => {
 	return (
 		<>
 			<Composition
+				id="AnimatedBarChart"
+				component={BarChart}
+				durationInFrames={180}
+				fps={30}
+				width={1280}
+				height={720}
+			/>
+			<Composition
+				id="switzerland-map"
+				lazyComponent={() => import('./SwitzerlandMap/SwitzerlandMap')}
+				durationInFrames={240}
+				fps={30}
+				width={1080}
+				height={1080}
+			/>
+			<Composition
+				id="zurich-to-stuttgart-map"
+				lazyComponent={() => import('./SwitzerlandMap/ZurichToStuttgartMap')}
+				durationInFrames={270}
+				fps={30}
+				width={1080}
+				height={1080}
+			/>
+			<Composition
 				id="captions-tester"
-				component={AnimatedCaptions}
+				component={AnimatedCaptionsComposition}
 				durationInFrames={CAPTIONS_DURATION_IN_FRAMES}
 				fps={30}
 				width={1080}
@@ -1775,6 +1815,14 @@ export const Index: React.FC = () => {
 					durationInFrames={600}
 				/>
 				<Composition
+					id="three-webgpu"
+					component={ThreeWebGPU}
+					width={1280}
+					height={720}
+					fps={30}
+					durationInFrames={600}
+				/>
+				<Composition
 					id="three-html"
 					component={ThreeHtml}
 					width={1280}
@@ -2197,6 +2245,14 @@ export const Index: React.FC = () => {
 					durationInFrames={300}
 					width={1920}
 				/>
+				<Composition
+					id="PushCutDemo"
+					component={PushCutDemo}
+					fps={30}
+					height={1080}
+					durationInFrames={PUSH_CUT_DEMO_DURATION_IN_FRAMES}
+					width={1920}
+				/>
 			</Folder>
 			<Folder name="Schema">
 				<Composition
@@ -2449,14 +2505,6 @@ export const Index: React.FC = () => {
 			<Still id="HugeImage" component={HugeImage} height={9000} width={9000} />
 			<Folder name="3DEngine">
 				<Composition
-					id="3DCheck"
-					component={ThreeDCheck}
-					width={1080}
-					height={1080}
-					fps={30}
-					durationInFrames={1000}
-				/>
-				<Composition
 					id="3DContext"
 					component={ThreeDContext}
 					width={1080}
@@ -2510,6 +2558,40 @@ export const Index: React.FC = () => {
 				height={1080}
 				fps={30}
 				durationInFrames={900}
+			/>
+			<Folder name="MultiSceneSample-Scenes">
+				<Composition
+					id="MultiSceneSample-Opening"
+					component={OpeningScene}
+					width={1920}
+					height={1080}
+					fps={30}
+					durationInFrames={90}
+				/>
+				<Composition
+					id="MultiSceneSample-Feature"
+					component={FeatureScene}
+					width={1920}
+					height={1080}
+					fps={30}
+					durationInFrames={90}
+				/>
+				<Composition
+					id="MultiSceneSample-Closing"
+					component={ClosingScene}
+					width={1920}
+					height={1080}
+					fps={30}
+					durationInFrames={90}
+				/>
+			</Folder>
+			<Composition
+				id="MultiSceneSample"
+				component={MultiSceneVideo}
+				width={1920}
+				height={1080}
+				fps={30}
+				durationInFrames={270}
 			/>
 			<Composition
 				id="spring-season"
@@ -2567,6 +2649,16 @@ export const Index: React.FC = () => {
 					height={1080}
 					fps={30}
 					durationInFrames={120}
+				/>
+			</Folder>
+			<Folder name="mac-cursors">
+				<Composition
+					id="mac-cursors"
+					component={MacCursorsExample}
+					width={1080}
+					height={1080}
+					fps={30}
+					durationInFrames={90}
 				/>
 			</Folder>
 			<Folder name="rough-notation">
@@ -2654,6 +2746,22 @@ export const Index: React.FC = () => {
 				durationInFrames={120}
 			/>
 			<Composition
+				id="visual-mode-3d"
+				component={VisualMode3D}
+				width={1080}
+				height={1080}
+				fps={30}
+				durationInFrames={120}
+			/>
+			<Composition
+				id="sequence-crop-controls"
+				component={SequenceCropTest}
+				width={1080}
+				height={1080}
+				fps={30}
+				durationInFrames={120}
+			/>
+			<Composition
 				id="sfx"
 				component={SfxExample}
 				width={1080}
@@ -2731,6 +2839,14 @@ export const Index: React.FC = () => {
 			/>
 			<Folder name="VisualModeTests">
 				<Composition
+					id="outline-selection-cases"
+					component={OutlineSelectionCases}
+					width={1920}
+					height={1080}
+					fps={30}
+					durationInFrames={2700}
+				/>
+				<Composition
 					id="fast-updates"
 					component={FastUpdates}
 					width={1080}
@@ -2763,6 +2879,14 @@ export const Index: React.FC = () => {
 					durationInFrames={90}
 				/>
 				<Composition
+					id="issue-9582-svg-paint-schema"
+					component={SvgPaintSchema}
+					width={1080}
+					height={1080}
+					fps={30}
+					durationInFrames={90}
+				/>
+				<Composition
 					id="video-config-expressions"
 					component={VideoConfigExpressions}
 					width={1200}
@@ -2780,6 +2904,24 @@ export const Index: React.FC = () => {
 				/>
 			</Folder>
 			<ChangingTrimBeforeValue />
+			<Composition
+				id="drag-and-drop-payloads"
+				component={DragAndDropExample}
+				width={1280}
+				height={720}
+				fps={30}
+				durationInFrames={30}
+			/>
+			<Folder name="error-overlay">
+				<Composition
+					id="error-overlay-unsymbolicated-e2e"
+					component={UnsymbolicatedErrorOverlayRepro}
+					width={400}
+					height={400}
+					fps={30}
+					durationInFrames={30}
+				/>
+			</Folder>
 			<Composition
 				id="browser-test"
 				component={BrowserTest}

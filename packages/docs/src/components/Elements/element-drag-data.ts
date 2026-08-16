@@ -1,7 +1,34 @@
 import {
-	ELEMENT_DRAG_MIME_TYPE,
-	type ElementDragData,
-} from '@remotion/studio-shared';
+	createElementPayload,
+	type StudioElementPayload,
+} from '@remotion/studio-protocol';
+import type {ElementDefinition} from './element-definitions';
+
+export const createElementPayloadFromDefinition = ({
+	definition,
+	sourceCode,
+}: {
+	readonly definition: ElementDefinition;
+	readonly sourceCode: string;
+}): StudioElementPayload => {
+	const dimensions =
+		definition.elementWidth !== null && definition.elementHeight !== null
+			? {
+					width: definition.elementWidth,
+					height: definition.elementHeight,
+				}
+			: null;
+
+	return createElementPayload({
+		dependencies: definition.dependencies,
+		dimensions,
+		displayName: definition.displayName,
+		durationInFrames: definition.durationInFrames,
+		installationMode: definition.installationMode,
+		slug: definition.slug,
+		sourceCode,
+	});
+};
 
 const ELEMENT_ICON_PATH =
 	'M3 3.5C3 2.67157 3.67157 2 4.5 2H11.5C12.3284 2 13 2.67157 13 3.5V12.5C13 13.3284 12.3284 14 11.5 14H4.5C3.67157 14 3 13.3284 3 12.5V3.5ZM4.5 3.5V6H11.5V3.5H4.5ZM11.5 7.5H4.5V12.5H11.5V7.5Z';
@@ -33,20 +60,6 @@ const makeElementDragImage = () => {
 	wrapper.appendChild(svg);
 
 	return wrapper;
-};
-
-export const setElementDragData = ({
-	dataTransfer,
-	dragData,
-}: {
-	readonly dataTransfer: DataTransfer;
-	readonly dragData: ElementDragData;
-}) => {
-	const serialized = JSON.stringify(dragData);
-	dataTransfer.effectAllowed = 'copy';
-	dataTransfer.setData(ELEMENT_DRAG_MIME_TYPE, serialized);
-	dataTransfer.setData('application/json', serialized);
-	dataTransfer.setData('text/plain', serialized);
 };
 
 export const setElementDragImage = (dataTransfer: DataTransfer) => {

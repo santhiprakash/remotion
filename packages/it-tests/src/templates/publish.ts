@@ -1,12 +1,4 @@
-import {
-	cpSync,
-	existsSync,
-	readdirSync,
-	readFileSync,
-	renameSync,
-	statSync,
-	writeFileSync,
-} from 'node:fs';
+import {cpSync, readFileSync, writeFileSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import path from 'path';
 import {$} from 'bun';
@@ -33,66 +25,6 @@ const skillsTemplate: MinimalTemplate = {
 };
 
 const templates = [skillsTemplate, ...folders];
-
-const embeddedSkillFilename = 'REFERENCE.md';
-
-const prepareEmbeddedBestPractices = (root: string) => {
-	const embeddedRoot = path.join(root, 'skills', 'remotion-best-practices');
-
-	if (!existsSync(embeddedRoot)) {
-		return;
-	}
-
-	const embeddedSkillNames = readdirSync(embeddedRoot, {withFileTypes: true})
-		.filter((entry) => {
-			const child = path.join(embeddedRoot, entry.name);
-			return (
-				entry.isDirectory() &&
-				entry.name !== 'rules' &&
-				statSync(path.join(child, 'SKILL.md'), {
-					throwIfNoEntry: false,
-				})?.isFile()
-			);
-		})
-		.map((entry) => entry.name)
-		.sort();
-
-	const rewriteMarkdownFiles = (dir: string) => {
-		for (const entry of readdirSync(dir, {withFileTypes: true})) {
-			const file = path.join(dir, entry.name);
-			if (entry.isDirectory()) {
-				rewriteMarkdownFiles(file);
-				continue;
-			}
-
-			if (!entry.isFile() || !file.endsWith('.md')) {
-				continue;
-			}
-
-			const contents = readFileSync(file, 'utf-8');
-			let rewritten = contents.replaceAll('../remotion-best-practices/', '../');
-			for (const skillName of embeddedSkillNames) {
-				rewritten = rewritten.replaceAll(
-					`${skillName}/SKILL.md`,
-					`${skillName}/${embeddedSkillFilename}`,
-				);
-			}
-			if (contents !== rewritten) {
-				writeFileSync(file, rewritten);
-			}
-		}
-	};
-
-	rewriteMarkdownFiles(embeddedRoot);
-
-	for (const skillName of embeddedSkillNames) {
-		const child = path.join(embeddedRoot, skillName);
-		renameSync(
-			path.join(child, 'SKILL.md'),
-			path.join(child, embeddedSkillFilename),
-		);
-	}
-};
 
 const publish = async (template: MinimalTemplate) => {
 	const folder = path.join(
@@ -141,7 +73,16 @@ const publish = async (template: MinimalTemplate) => {
 	}
 
 	if (template.templateInMonorepo === 'skills') {
-		prepareEmbeddedBestPractices(workingDir);
+		const prepareEmbeddedSkillsScript = path.join(
+			__dirname,
+			'..',
+			'..',
+			'..',
+			'skills',
+			'scripts',
+			'prepare-embedded-skills.ts',
+		);
+		await $`bun ${prepareEmbeddedSkillsScript} ${path.join(workingDir, 'skills')}`;
 	}
 
 	await $`git add .`.cwd(workingDir).nothrow();
@@ -155,16 +96,31 @@ const publish = async (template: MinimalTemplate) => {
 	await $`git push origin ${defaultBranch.trim()}`.cwd(workingDir);
 };
 
-const publishCodexPlugin = async () => {
+type AgentPluginPublishTarget = {
+	commitMessage: string;
+	filesToCopy: string[];
+	manifestPaths: string[];
+	name: string;
+	readme?: string;
+	repoName: string;
+	skillsDir: string;
+};
+
+const publishBuiltAgentPlugin = async ({
+	commitMessage,
+	filesToCopy,
+	manifestPaths,
+	name,
+	readme,
+	repoName,
+	skillsDir,
+}: AgentPluginPublishTarget) => {
 	const codexPluginDir = path.join(__dirname, '..', '..', '..', 'codex-plugin');
 
-	// Run the build step to assemble skills
-	await $`bun build.mts`.cwd(codexPluginDir);
-
 	const tmpDir = tmpdir();
-	const workingDir = path.join(tmpDir, `codex-plugin-${Math.random()}`);
+	const workingDir = path.join(tmpDir, `${repoName}-${Math.random()}`);
 
-	await $`git clone git@github.com:remotion-dev/codex-plugin.git ${workingDir} --depth 1`;
+	await $`git clone git@github.com:remotion-dev/${repoName}.git ${workingDir} --depth 1`;
 
 	const defaultBranch = await $`git branch --show-current`
 		.cwd(workingDir)
@@ -178,22 +134,82 @@ const publishCodexPlugin = async () => {
 		await $`rm ${file}`.cwd(workingDir).quiet();
 	}
 
-	const filesToCopy = ['.codex-plugin', 'assets', 'skills', 'README.md'];
 	for (const entry of filesToCopy) {
-		const src = path.join(codexPluginDir, entry);
+		const src =
+			entry === 'skills' ? skillsDir : path.join(codexPluginDir, entry);
 		const dst = path.join(workingDir, entry);
 		cpSync(src, dst, {recursive: true});
+	}
+	if (readme) {
+		cpSync(
+			path.join(codexPluginDir, readme),
+			path.join(workingDir, 'README.md'),
+		);
+	}
+
+	const packageJson = JSON.parse(
+		readFileSync(path.join(codexPluginDir, 'package.json'), 'utf-8'),
+	);
+	for (const manifestPath of manifestPaths) {
+		const pluginJsonPath = path.join(workingDir, manifestPath);
+		const pluginJson = JSON.parse(readFileSync(pluginJsonPath, 'utf-8'));
+		writeFileSync(
+			pluginJsonPath,
+			`${JSON.stringify({...pluginJson, version: packageJson.version}, null, '\t')}\n`,
+		);
 	}
 
 	await $`git add .`.cwd(workingDir).nothrow();
 	const hasChanges = await $`git status --porcelain`.cwd(workingDir).text();
 	if (!hasChanges) {
-		console.log('No changes in codex-plugin');
+		console.log(`No changes in ${name}`);
 		return;
 	}
 
-	await $`git commit -m "Update codex plugin"`.cwd(workingDir);
+	await $`git commit -m ${commitMessage}`.cwd(workingDir);
 	await $`git push origin ${defaultBranch.trim()}`.cwd(workingDir);
+};
+
+const publishAgentPlugins = async () => {
+	const codexPluginDir = path.join(__dirname, '..', '..', '..', 'codex-plugin');
+	const cursorSkillsDir = path.join(
+		tmpdir(),
+		`cursor-plugin-skills-${Math.random()}`,
+	);
+
+	await Promise.all([
+		$`bun build.mts`.cwd(codexPluginDir),
+		$`bun build.mts --client=cursor --output=${cursorSkillsDir}`.cwd(
+			codexPluginDir,
+		),
+	]);
+
+	await Promise.all([
+		publishBuiltAgentPlugin({
+			commitMessage: 'Update Codex plugin',
+			filesToCopy: [
+				'.codex-plugin',
+				'assets',
+				'LICENSE',
+				'plugin.json',
+				'skills',
+				'README.md',
+			],
+			manifestPaths: ['plugin.json', '.codex-plugin/plugin.json'],
+			name: 'codex-plugin',
+			repoName: 'codex-plugin',
+			skillsDir: path.join(codexPluginDir, 'skills'),
+		}),
+		publishBuiltAgentPlugin({
+			commitMessage: 'Update Cursor plugin',
+			filesToCopy: ['LICENSE', 'plugin.json', 'skills'],
+			manifestPaths: ['plugin.json'],
+			name: 'cursor-plugin',
+			readme: 'README.cursor.md',
+			repoName: 'cursor-plugin',
+			skillsDir: cursorSkillsDir,
+		}),
+	]);
 };
 
 const publishClaudeCodePlugin = async () => {
@@ -324,7 +340,7 @@ for (let i = 0; i < templates.length; i += CONCURRENCY) {
 
 results.push(
 	...(await Promise.allSettled([
-		publishCodexPlugin(),
+		publishAgentPlugins(),
 		publishClaudeCodePlugin(),
 		publishKimiCodePlugin(),
 	])),

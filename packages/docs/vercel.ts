@@ -48,6 +48,46 @@ export const config: VercelConfig = {
 	],
 	redirects: [
 		routes.redirect(
+			'/elements/guidelines',
+			'/elements/contributing#element-guidelines',
+			{permanent: true},
+		),
+		routes.redirect(
+			'/elements/guidelines.md',
+			'/elements/contributing.md#element-guidelines',
+			{permanent: true},
+		),
+		routes.redirect(
+			'/elements/submit-an-element',
+			'/elements/contributing#submit-an-element',
+			{permanent: true},
+		),
+		routes.redirect(
+			'/elements/submit-an-element.md',
+			'/elements/contributing.md#submit-an-element',
+			{permanent: true},
+		),
+		routes.redirect(
+			'/elements/overlays/lower-third',
+			'/elements/overlays/name-lower-third',
+			{permanent: true},
+		),
+		routes.redirect(
+			'/elements/overlays/lower-third.md',
+			'/elements/overlays/name-lower-third.md',
+			{permanent: true},
+		),
+		routes.redirect(
+			'/elements/overlays/social-endcard',
+			'/elements/youtube/youtube-end-card',
+			{permanent: true},
+		),
+		routes.redirect(
+			'/elements/overlays/social-endcard.md',
+			'/elements/youtube/youtube-end-card.md',
+			{permanent: true},
+		),
+		routes.redirect(
 			'/changelog',
 			'https://github.com/remotion-dev/remotion/releases',
 			{permanent: false},
@@ -80,6 +120,11 @@ export const config: VercelConfig = {
 			'https://github.com/remotion-dev/remotion/issues/new/choose',
 			{permanent: false},
 		),
+		routes.redirect(
+			'/vision',
+			'https://github.com/remotion-dev/remotion/issues/9081',
+			{permanent: false},
+		),
 		routes.redirect('/skia', '/docs/skia', {permanent: false}),
 		routes.redirect('/gif', '/docs/gif', {permanent: false}),
 		routes.redirect('/lottie', '/docs/lottie', {permanent: false}),
@@ -104,6 +149,7 @@ export const config: VercelConfig = {
 			'/docs/renderer/get-compositions',
 			{permanent: true},
 		),
+		routes.redirect('/docs/webpack', '/docs/bundlers', {permanent: true}),
 		routes.redirect(
 			'/docs/stitch-frames-to-video',
 			'/docs/renderer/stitch-frames-to-video',
@@ -124,6 +170,11 @@ export const config: VercelConfig = {
 		),
 		routes.redirect('/support', '/docs/support', {permanent: true}),
 		routes.redirect('/webcodecs', '/docs/webcodecs', {permanent: true}),
+		routes.redirect(
+			'/docs/miscellaneous/parse-media-vs-get-video-metadata',
+			'/docs/mediabunny/metadata',
+			{permanent: true},
+		),
 		routes.redirect('/docs/miscellaneous/snippets/hls', '/docs/hls', {
 			permanent: true,
 		}),
@@ -257,6 +308,11 @@ export const config: VercelConfig = {
 		}),
 		routes.redirect('/skills', '/docs/ai/skills', {permanent: false}),
 		routes.redirect(
+			'/codex',
+			'https://chatgpt.com/plugins/plugins~Plugin_efd07789186881918253a50acfc32762?open_in_codex',
+			{permanent: false},
+		),
+		routes.redirect(
 			'/repro',
 			'https://stackblitz.com/fork/github/remotion-dev/template-helloworld',
 			{permanent: false},
@@ -322,6 +378,22 @@ export const config: VercelConfig = {
 			permanent: false,
 		}),
 		routes.redirect('/captions', '/docs/captions', {permanent: false}),
+		routes.redirect('/docs/animated-captions', '/elements/captions/', {
+			permanent: true,
+		}),
+		routes.redirect('/docs/animated-captions/faq', '/elements/captions/', {
+			permanent: true,
+		}),
+		routes.redirect(
+			'/elements/data/product-offer',
+			'/elements/commerce/product-offer',
+			{permanent: true},
+		),
+		routes.redirect(
+			'/elements/text/news-article-headline-highlight',
+			'/elements/text/news-article-highlight',
+			{permanent: true},
+		),
 		routes.redirect(
 			'/docs/miscellaneous/snippets/adding-animations',
 			'/docs/animation-math',
@@ -376,10 +448,37 @@ export const config: VercelConfig = {
 		routes.redirect('/docs/studio/code-edits', '/docs/studio/interactivity', {
 			permanent: true,
 		}),
-		routes.redirect('/terms', '/docs/license/terms', {permanent: true}),
-		routes.redirect('/privacy', '/docs/license/privacy', {permanent: true}),
-		routes.redirect('/dpa', '/docs/license/dpa', {permanent: true}),
-		routes.redirect('/dpia', '/docs/license/dpia', {permanent: true}),
+		routes.redirect('/terms', '/docs/terms', {permanent: true}),
+		routes.redirect('/privacy', '/docs/privacy', {permanent: true}),
+		routes.redirect('/telemetry', '/docs/telemetry', {permanent: true}),
+		routes.redirect('/dpa', '/docs/dpa', {permanent: true}),
+		routes.redirect('/dpia', '/docs/dpia', {permanent: true}),
+		routes.redirect('/docs/license/terms', '/docs/terms', {permanent: true}),
+		routes.redirect('/docs/license/privacy', '/docs/privacy', {
+			permanent: true,
+		}),
+		routes.redirect('/docs/license/telemetry', '/docs/telemetry', {
+			permanent: true,
+		}),
+		routes.redirect(
+			'/docs/client-side-rendering/telemetry',
+			'/docs/telemetry',
+			{
+				permanent: true,
+			},
+		),
+		routes.redirect('/docs/license/dpa', '/docs/dpa', {permanent: true}),
+		routes.redirect('/docs/license/dpia', '/docs/dpia', {permanent: true}),
+		routes.redirect(
+			'/docs/license/accessibility-statement-remotion-dev',
+			'/docs/accessibility/dev',
+			{permanent: true},
+		),
+		routes.redirect(
+			'/docs/license/accessibility-statement-remotion-pro',
+			'/docs/accessibility/pro',
+			{permanent: true},
+		),
 		routes.redirect('/docs/ai/claude-code', '/docs/ai/coding-agents', {
 			permanent: false,
 		}),

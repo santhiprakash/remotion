@@ -4,6 +4,7 @@ import {brightness} from '@remotion/effects/brightness';
 import {burlap} from '@remotion/effects/burlap';
 import {checkerboard} from '@remotion/effects/checkerboard';
 import {chromaticAberration} from '@remotion/effects/chromatic-aberration';
+import {colorCorrection} from '@remotion/effects/color-correction';
 import {colorKey} from '@remotion/effects/color-key';
 import {contourLines} from '@remotion/effects/contour-lines';
 import {contrast} from '@remotion/effects/contrast';
@@ -13,6 +14,7 @@ import {dropShadow} from '@remotion/effects/drop-shadow';
 import {duotone} from '@remotion/effects/duotone';
 import {emboss} from '@remotion/effects/emboss';
 import {evolve} from '@remotion/effects/evolve';
+import {exposure} from '@remotion/effects/exposure';
 import {fisheye} from '@remotion/effects/fisheye';
 import {flannel} from '@remotion/effects/flannel';
 import {glow} from '@remotion/effects/glow';
@@ -22,6 +24,8 @@ import {halftone} from '@remotion/effects/halftone';
 import {halftoneLinearGradient} from '@remotion/effects/halftone-linear-gradient';
 import {hue} from '@remotion/effects/hue';
 import {invert} from '@remotion/effects/invert';
+import {levels} from '@remotion/effects/levels';
+import {lightLeak} from '@remotion/effects/light-leak';
 import {lightTrail} from '@remotion/effects/light-trail';
 import {linearGradient} from '@remotion/effects/linear-gradient';
 import {linearGradientTint} from '@remotion/effects/linear-gradient-tint';
@@ -38,34 +42,38 @@ import {pixelDissolve} from '@remotion/effects/pixel-dissolve';
 import {pixelate} from '@remotion/effects/pixelate';
 import {radialProgressiveBlur} from '@remotion/effects/radial-progressive-blur';
 import {radialProgressivePixelate} from '@remotion/effects/radial-progressive-pixelate';
+import {regionBlur} from '@remotion/effects/region-blur';
 import {rings} from '@remotion/effects/rings';
 import {roughenEdges} from '@remotion/effects/roughen-edges';
 import {saturation} from '@remotion/effects/saturation';
 import {scale} from '@remotion/effects/scale';
 import {scanlines} from '@remotion/effects/scanlines';
+import {shadowsHighlights} from '@remotion/effects/shadows-highlights';
 import {shine} from '@remotion/effects/shine';
 import {shrinkwrap} from '@remotion/effects/shrinkwrap';
 import {skew} from '@remotion/effects/skew';
 import {speckle} from '@remotion/effects/speckle';
+import {starburst} from '@remotion/effects/starburst';
 import {thermalVision} from '@remotion/effects/thermal-vision';
 import {tint} from '@remotion/effects/tint';
 import {uvTranslate, xyTranslate} from '@remotion/effects/translate';
 import {tvSignalOff} from '@remotion/effects/tv-signal-off';
 import {venetianBlinds} from '@remotion/effects/venetian-blinds';
+import {vibrance} from '@remotion/effects/vibrance';
 import {vignette} from '@remotion/effects/vignette';
 import {wave} from '@remotion/effects/wave';
 import {waves} from '@remotion/effects/waves';
+import {whiteBalance} from '@remotion/effects/white-balance';
 import {whiteNoise} from '@remotion/effects/white-noise';
 import {zigzag} from '@remotion/effects/zigzag';
 import {zoomBlur} from '@remotion/effects/zoom-blur';
-import {lightLeakEffectSchema} from '@remotion/light-leaks';
-import {starburstEffectSchema} from '@remotion/starburst';
 import {EffectsBarrelDistortionPreview} from '../effects/effects-barrel-distortion-preview';
 import {EffectsBlurPreview} from '../effects/effects-blur-preview';
 import {EffectsBrightnessPreview} from '../effects/effects-brightness-preview';
 import {EffectsBurlapPreview} from '../effects/effects-burlap-preview';
 import {EffectsCheckerboardPreview} from '../effects/effects-checkerboard-preview';
 import {EffectsChromaticAberrationPreview} from '../effects/effects-chromatic-aberration-preview';
+import {EffectsColorCorrectionPreview} from '../effects/effects-color-correction-preview';
 import {EffectsColorKeyPreview} from '../effects/effects-color-key-preview';
 import {EffectsContourLinesPreview} from '../effects/effects-contour-lines-preview';
 import {EffectsContrastPreview} from '../effects/effects-contrast-preview';
@@ -75,6 +83,7 @@ import {EffectsDropShadowPreview} from '../effects/effects-drop-shadow-preview';
 import {EffectsDuotonePreview} from '../effects/effects-duotone-preview';
 import {EffectsEmbossPreview} from '../effects/effects-emboss-preview';
 import {EffectsEvolvePreview} from '../effects/effects-evolve-preview';
+import {EffectsExposurePreview} from '../effects/effects-exposure-preview';
 import {EffectsFisheyePreview} from '../effects/effects-fisheye-preview';
 import {EffectsFlannelPreview} from '../effects/effects-flannel-preview';
 import {EffectsGlowPreview} from '../effects/effects-glow-preview';
@@ -84,6 +93,7 @@ import {EffectsHalftoneLinearGradientPreview} from '../effects/effects-halftone-
 import {EffectsHalftonePreview} from '../effects/effects-halftone-preview';
 import {EffectsHuePreview} from '../effects/effects-hue-preview';
 import {EffectsInvertPreview} from '../effects/effects-invert-preview';
+import {EffectsLevelsPreview} from '../effects/effects-levels-preview';
 import {EffectsLightLeakPreview} from '../effects/effects-light-leak-preview';
 import {
 	EffectsLightTrailPreview,
@@ -117,11 +127,13 @@ import {
 	RADIAL_PROGRESSIVE_BLUR_PREVIEW_PARAMS,
 } from '../effects/effects-radial-progressive-blur-preview';
 import {EffectsRadialProgressivePixelatePreview} from '../effects/effects-radial-progressive-pixelate-preview';
+import {EffectsRegionBlurPreview} from '../effects/effects-region-blur-preview';
 import {EffectsRingsPreview} from '../effects/effects-rings-preview';
 import {EffectsRoughenEdgesPreview} from '../effects/effects-roughen-edges-preview';
 import {EffectsSaturationPreview} from '../effects/effects-saturation-preview';
 import {EffectsScalePreview} from '../effects/effects-scale-preview';
 import {EffectsScanlinesPreview} from '../effects/effects-scanlines-preview';
+import {EffectsShadowsHighlightsPreview} from '../effects/effects-shadows-highlights-preview';
 import {EffectsShinePreview} from '../effects/effects-shine-preview';
 import {
 	EffectsShrinkwrapPreview,
@@ -141,9 +153,11 @@ import {
 } from '../effects/effects-translate-preview';
 import {EffectsTvSignalOffPreview} from '../effects/effects-tv-signal-off-preview';
 import {EffectsVenetianBlindsPreview} from '../effects/effects-venetian-blinds-preview';
+import {EffectsVibrancePreview} from '../effects/effects-vibrance-preview';
 import {EffectsVignettePreview} from '../effects/effects-vignette-preview';
 import {EffectsWavePreview} from '../effects/effects-wave-preview';
 import {EffectsWavesPreview} from '../effects/effects-waves-preview';
+import {EffectsWhiteBalancePreview} from '../effects/effects-white-balance-preview';
 import {EffectsWhiteNoisePreview} from '../effects/effects-white-noise-preview';
 import {EffectsZigzagPreview} from '../effects/effects-zigzag-preview';
 import {EffectsZoomBlurPreview} from '../effects/effects-zoom-blur-preview';
@@ -224,6 +238,14 @@ export const effectsDemos: EffectsDemoType[] = [
 	},
 	{
 		...defaults,
+		id: 'effects-color-correction',
+		effectName: 'colorCorrection',
+		effectImportPath: '@remotion/effects/color-correction',
+		comp: EffectsColorCorrectionPreview,
+		schema: colorCorrection().definition.schema,
+	},
+	{
+		...defaults,
 		id: 'effects-duotone',
 		effectName: 'duotone',
 		effectImportPath: '@remotion/effects/duotone',
@@ -237,6 +259,30 @@ export const effectsDemos: EffectsDemoType[] = [
 		effectImportPath: '@remotion/effects/evolve',
 		comp: EffectsEvolvePreview,
 		schema: evolve().definition.schema,
+	},
+	{
+		...defaults,
+		id: 'effects-exposure',
+		effectName: 'exposure',
+		effectImportPath: '@remotion/effects/exposure',
+		comp: EffectsExposurePreview,
+		schema: exposure().definition.schema,
+	},
+	{
+		...defaults,
+		id: 'effects-white-balance',
+		effectName: 'whiteBalance',
+		effectImportPath: '@remotion/effects/white-balance',
+		comp: EffectsWhiteBalancePreview,
+		schema: whiteBalance().definition.schema,
+	},
+	{
+		...defaults,
+		id: 'effects-vibrance',
+		effectName: 'vibrance',
+		effectImportPath: '@remotion/effects/vibrance',
+		comp: EffectsVibrancePreview,
+		schema: vibrance().definition.schema,
 	},
 	{
 		...defaults,
@@ -288,11 +334,27 @@ export const effectsDemos: EffectsDemoType[] = [
 	},
 	{
 		...defaults,
+		id: 'effects-levels',
+		effectName: 'levels',
+		effectImportPath: '@remotion/effects/levels',
+		comp: EffectsLevelsPreview,
+		schema: levels().definition.schema,
+	},
+	{
+		...defaults,
 		id: 'effects-saturation',
 		effectName: 'saturation',
 		effectImportPath: '@remotion/effects/saturation',
 		comp: EffectsSaturationPreview,
 		schema: saturation().definition.schema,
+	},
+	{
+		...defaults,
+		id: 'effects-shadows-highlights',
+		effectName: 'shadowsHighlights',
+		effectImportPath: '@remotion/effects/shadows-highlights',
+		comp: EffectsShadowsHighlightsPreview,
+		schema: shadowsHighlights().definition.schema,
 	},
 	{
 		...defaults,
@@ -555,6 +617,21 @@ export const effectsDemos: EffectsDemoType[] = [
 	},
 	{
 		...defaults,
+		id: 'effects-region-blur',
+		effectName: 'regionBlur',
+		effectImportPath: '@remotion/effects/region-blur',
+		comp: EffectsRegionBlurPreview,
+		schema: regionBlur({
+			topLeft: [0.28, 0.18],
+			bottomRight: [0.72, 0.82],
+		}).definition.schema,
+		initialValues: {
+			topLeft: [0.28, 0.18],
+			bottomRight: [0.72, 0.82],
+		},
+	},
+	{
+		...defaults,
 		id: 'effects-light-trail',
 		effectName: 'lightTrail',
 		effectImportPath: '@remotion/effects/light-trail',
@@ -686,17 +763,20 @@ export const effectsDemos: EffectsDemoType[] = [
 		...defaults,
 		id: 'effects-starburst',
 		effectName: 'starburst',
-		effectImportPath: '@remotion/starburst',
+		effectImportPath: '@remotion/effects/starburst',
 		comp: EffectsStarburstPreview,
-		schema: starburstEffectSchema,
+		schema: starburst({
+			rays: 16,
+			colors: ['#dff4ff', '#7cc6ff'],
+		}).definition.schema,
 		initialValues: STARBURST_PREVIEW_PARAMS,
 	},
 	{
 		...defaults,
 		id: 'effects-light-leak',
 		effectName: 'lightLeak',
-		effectImportPath: '@remotion/light-leaks',
+		effectImportPath: '@remotion/effects/light-leak',
 		comp: EffectsLightLeakPreview,
-		schema: lightLeakEffectSchema,
+		schema: lightLeak().definition.schema,
 	},
 ];

@@ -52,7 +52,7 @@ export const getFolderMenuItems = ({
 						}
 
 						try {
-							await openOriginalPositionInEditor(resolvedLocation);
+							await openOriginalPositionInEditor(resolvedLocation, null);
 						} catch (err) {
 							showNotification((err as Error).message, 2000);
 						}
@@ -111,6 +111,7 @@ export const getFolderMenuItems = ({
 					folderName: folder.name,
 					parentName: folder.parent,
 					stack: folder.stack,
+					canvasCapture: null,
 				});
 			},
 			quickSwitcherLabel: 'New composition in folder...',

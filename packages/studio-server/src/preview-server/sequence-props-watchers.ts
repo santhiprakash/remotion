@@ -18,12 +18,16 @@ import {getCachedNodePath, setCachedNodePath} from './node-path-cache';
 import {
 	computeSequencePropsStatus,
 	computeSequencePropsStatusFromContent,
-	computeSequencePropsStatusFromFilenameByLine,
+	computeSequencePropsStatusFromFilenameByLocation,
 } from './routes/can-update-sequence-props';
 
 type WatcherInfo = {
 	unwatch: () => void;
 	refCount: number;
+	currentNodePath: Extract<
+		SubscribeToSequencePropsResponse,
+		{success: true}
+	>['nodePath'];
 };
 
 const sequencePropsWatchers: Record<string, Record<string, WatcherInfo>> = {};
@@ -45,6 +49,7 @@ const getSequencePropsStatus = ({
 	line,
 	column,
 	preferredNodePath,
+	resolvedNodePath,
 	componentIdentity,
 	keys,
 	assetKeys,
@@ -57,6 +62,7 @@ const getSequencePropsStatus = ({
 	line: number;
 	column: number;
 	preferredNodePath: SequenceNodePath | null;
+	resolvedNodePath: SequenceNodePath | null;
 	componentIdentity: JsxComponentIdentity | null;
 	keys: string[];
 	assetKeys: string[];
@@ -143,9 +149,44 @@ const getSequencePropsStatus = ({
 		}
 	}
 
-	const status = computeSequencePropsStatusFromFilenameByLine({
+	if (resolvedNodePath) {
+		try {
+			return {
+				status: computeSequencePropsStatus({
+					fileName,
+					nodePath: resolvedNodePath,
+					componentIdentity,
+					keys,
+					assetKeys,
+					effects,
+					remotionRoot,
+					videoConfigValues,
+				}),
+				nodePath: {
+					absolutePath: path.resolve(remotionRoot, fileName),
+					nodePath: resolvedNodePath,
+					sequenceKeys: keys,
+					effectKeys: effects,
+					videoConfigValues,
+				},
+				success: true,
+			};
+		} catch (error) {
+			if (
+				!(
+					error instanceof JsxElementIdentityMismatchError ||
+					error instanceof JsxElementNotFoundAtLocationError
+				)
+			) {
+				throw error;
+			}
+		}
+	}
+
+	const status = computeSequencePropsStatusFromFilenameByLocation({
 		fileName,
 		line,
+		column,
 		componentIdentity,
 		keys,
 		assetKeys,
@@ -163,6 +204,7 @@ export const subscribeToSequencePropsWatchers = ({
 	line,
 	column,
 	nodePath: preferredNodePath,
+	resolvedNodePath = null,
 	componentIdentity,
 	keys,
 	assetKeys,
@@ -176,6 +218,7 @@ export const subscribeToSequencePropsWatchers = ({
 	line: number;
 	column: number;
 	nodePath: SequenceNodePath | null;
+	resolvedNodePath?: SequenceNodePath | null;
 	componentIdentity: JsxComponentIdentity | null;
 	keys: string[];
 	assetKeys: string[];
@@ -190,6 +233,7 @@ export const subscribeToSequencePropsWatchers = ({
 		line,
 		column,
 		preferredNodePath,
+		resolvedNodePath,
 		componentIdentity,
 		keys,
 		assetKeys,
@@ -211,12 +255,17 @@ export const subscribeToSequencePropsWatchers = ({
 	const {nodePath} = initialResult;
 	const watcherKey = getWatcherKey(nodePath, assetKeys);
 
-	// If a watcher already exists for this key, just bump the ref count
-	if (sequencePropsWatchers[clientId]?.[watcherKey]) {
-		sequencePropsWatchers[clientId][watcherKey].refCount++;
+	const existingWatcher = sequencePropsWatchers[clientId]?.[watcherKey];
+	if (existingWatcher) {
+		existingWatcher.refCount++;
 		return initialResult;
 	}
 
+	const watcherInfo: WatcherInfo = {
+		unwatch: () => undefined,
+		refCount: 1,
+		currentNodePath: nodePath,
+	};
 	const {unwatch} = installFileWatcher({
 		file: absolutePath,
 		existenceOnly: false,
@@ -229,10 +278,14 @@ export const subscribeToSequencePropsWatchers = ({
 				return;
 			}
 
+			if (event.type === 'changed' && event.skipSequencePropsUpdate) {
+				return;
+			}
+
 			try {
 				const result = computeSequencePropsStatusFromContent({
 					fileContents: event.content,
-					nodePath: nodePath.nodePath,
+					nodePath: watcherInfo.currentNodePath.nodePath,
 					componentIdentity,
 					keys,
 					assetKeys,
@@ -259,7 +312,7 @@ export const subscribeToSequencePropsWatchers = ({
 					listener.sendEventToClientId(clientId, {
 						type: 'sequence-props-updated',
 						fileName,
-						nodePath,
+						nodePath: watcherInfo.currentNodePath,
 						result,
 					});
 				});
@@ -283,12 +336,13 @@ export const subscribeToSequencePropsWatchers = ({
 			}
 		},
 	});
+	watcherInfo.unwatch = unwatch;
 
 	if (!sequencePropsWatchers[clientId]) {
 		sequencePropsWatchers[clientId] = {};
 	}
 
-	sequencePropsWatchers[clientId][watcherKey] = {unwatch, refCount: 1};
+	sequencePropsWatchers[clientId][watcherKey] = watcherInfo;
 
 	return initialResult;
 };

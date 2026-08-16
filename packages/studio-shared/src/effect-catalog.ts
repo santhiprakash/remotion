@@ -1,4 +1,4 @@
-import type {EffectDragData} from './effect-drag-data';
+import type {EffectDragData} from '@remotion/studio-protocol';
 
 export type EffectCatalogItem = {
 	readonly id: string;
@@ -14,14 +14,6 @@ export type EffectCatalogCategory = {
 };
 
 export const getEffectDocumentationPath = (item: EffectCatalogItem) => {
-	if (item.id === 'effects-light-leak') {
-		return '/docs/light-leaks/light-leak-effect';
-	}
-
-	if (item.id === 'effects-starburst') {
-		return '/docs/starburst/starburst-effect';
-	}
-
 	return `/docs/effects/${item.id.slice('effects-'.length)}`;
 };
 
@@ -42,16 +34,6 @@ export const getEffectPreviewAlt = (item: EffectCatalogItem) => {
 		.replace(/^tv /, 'TV ');
 
 	return `${effectName} effect preview`;
-};
-
-export const makeEffectDragDataFromCatalogItem = (
-	item: EffectCatalogItem,
-): EffectDragData => {
-	return {
-		type: 'remotion-effect',
-		version: 1,
-		effect: item.effect,
-	};
 };
 
 export const getEffectCatalogCategories = (
@@ -102,6 +84,17 @@ export const EFFECT_CATALOG: readonly EffectCatalogItem[] = [
 		},
 	},
 	{
+		id: 'effects-color-correction',
+		category: 'Color',
+		label: 'colorCorrection()',
+		description: 'Combined primary color adjustments',
+		effect: {
+			name: 'colorCorrection',
+			importPath: '@remotion/effects/color-correction',
+			config: {},
+		},
+	},
+	{
 		id: 'effects-color-key',
 		category: 'Color',
 		label: 'colorKey()',
@@ -122,6 +115,17 @@ export const EFFECT_CATALOG: readonly EffectCatalogItem[] = [
 		effect: {
 			name: 'duotone',
 			importPath: '@remotion/effects/duotone',
+			config: {},
+		},
+	},
+	{
+		id: 'effects-exposure',
+		category: 'Color',
+		label: 'exposure()',
+		description: 'Stop-based exposure adjustment',
+		effect: {
+			name: 'exposure',
+			importPath: '@remotion/effects/exposure',
 			config: {},
 		},
 	},
@@ -159,6 +163,17 @@ export const EFFECT_CATALOG: readonly EffectCatalogItem[] = [
 		},
 	},
 	{
+		id: 'effects-levels',
+		category: 'Color',
+		label: 'levels()',
+		description: 'Black point, white point, and gamma',
+		effect: {
+			name: 'levels',
+			importPath: '@remotion/effects/levels',
+			config: {},
+		},
+	},
+	{
 		id: 'effects-saturation',
 		category: 'Color',
 		label: 'saturation()',
@@ -166,6 +181,17 @@ export const EFFECT_CATALOG: readonly EffectCatalogItem[] = [
 		effect: {
 			name: 'saturation',
 			importPath: '@remotion/effects/saturation',
+			config: {},
+		},
+	},
+	{
+		id: 'effects-shadows-highlights',
+		category: 'Color',
+		label: 'shadowsHighlights()',
+		description: 'Recover dark and bright tonal regions',
+		effect: {
+			name: 'shadowsHighlights',
+			importPath: '@remotion/effects/shadows-highlights',
 			config: {},
 		},
 	},
@@ -180,6 +206,28 @@ export const EFFECT_CATALOG: readonly EffectCatalogItem[] = [
 			config: {
 				color: '#1ec8ff',
 			},
+		},
+	},
+	{
+		id: 'effects-white-balance',
+		category: 'Color',
+		label: 'whiteBalance()',
+		description: 'Temperature and tint correction',
+		effect: {
+			name: 'whiteBalance',
+			importPath: '@remotion/effects/white-balance',
+			config: {},
+		},
+	},
+	{
+		id: 'effects-vibrance',
+		category: 'Color',
+		label: 'vibrance()',
+		description: 'Selective saturation adjustment',
+		effect: {
+			name: 'vibrance',
+			importPath: '@remotion/effects/vibrance',
+			config: {},
 		},
 	},
 	{
@@ -248,6 +296,20 @@ export const EFFECT_CATALOG: readonly EffectCatalogItem[] = [
 			name: 'radialProgressiveBlur',
 			importPath: '@remotion/effects/radial-progressive-blur',
 			config: {},
+		},
+	},
+	{
+		id: 'effects-region-blur',
+		category: 'Blur & Shadow',
+		label: 'regionBlur()',
+		description: 'Blur a rectangular or rounded region',
+		effect: {
+			name: 'regionBlur',
+			importPath: '@remotion/effects/region-blur',
+			config: {
+				topLeft: [0.28, 0.18],
+				bottomRight: [0.72, 0.82],
+			},
 		},
 	},
 	{
@@ -791,7 +853,7 @@ export const EFFECT_CATALOG: readonly EffectCatalogItem[] = [
 		description: 'Light leak overlay effect',
 		effect: {
 			name: 'lightLeak',
-			importPath: '@remotion/light-leaks',
+			importPath: '@remotion/effects/light-leak',
 			config: {},
 		},
 	},
@@ -802,7 +864,7 @@ export const EFFECT_CATALOG: readonly EffectCatalogItem[] = [
 		description: 'Starburst ray effect',
 		effect: {
 			name: 'starburst',
-			importPath: '@remotion/starburst',
+			importPath: '@remotion/effects/starburst',
 			config: {
 				rays: 16,
 				colors: ['#ff6600', '#ffff00'],

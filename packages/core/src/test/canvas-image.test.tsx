@@ -276,9 +276,38 @@ test('<CanvasImage> registers its canvas as the outline ref', async () => {
 	});
 });
 
-test('<CanvasImage> exposes non-keyframable premounting schema fields', () => {
+test('<CanvasImage> schema exposes src and non-keyframable premounting fields', () => {
+	expect(canvasImageSchema.src).toEqual({
+		type: 'asset',
+		default: undefined,
+		description: 'Source',
+		keyframable: false,
+	});
 	expect(canvasImageSchema.premountFor.keyframable).toBe(false);
 	expect(canvasImageSchema.postmountFor.keyframable).toBe(false);
+});
+
+test('<CanvasImage> applies crop props to the canvas', async () => {
+	const {container} = render(
+		wrapCanvasImage(
+			<CanvasImage
+				src="test.png"
+				width={120}
+				height={80}
+				cropLeft={0.1}
+				cropRight={0.2}
+				cropTop={0.3}
+				cropBottom={0.4}
+			/>,
+		),
+	);
+
+	const canvas = container.querySelector('canvas');
+	expect(canvas?.style.clipPath).toBe('inset(30% 20% 40% 10%)');
+
+	await waitFor(() => {
+		expect(getDelayRenderState().remotion_renderReady).toBe(true);
+	});
 });
 
 test('<CanvasImage> hides the canvas while premounted and postmounted', async () => {

@@ -8,6 +8,7 @@ import {EffectsBrightnessPreview} from '../../components/effects/effects-brightn
 import {EffectsBurlapPreview} from '../../components/effects/effects-burlap-preview';
 import {EffectsCheckerboardPreview} from '../../components/effects/effects-checkerboard-preview';
 import {EffectsChromaticAberrationPreview} from '../../components/effects/effects-chromatic-aberration-preview';
+import {EffectsColorCorrectionPreview} from '../../components/effects/effects-color-correction-preview';
 import {EffectsColorKeyPreview} from '../../components/effects/effects-color-key-preview';
 import {EffectsContourLinesPreview} from '../../components/effects/effects-contour-lines-preview';
 import {EffectsContrastPreview} from '../../components/effects/effects-contrast-preview';
@@ -17,6 +18,7 @@ import {EffectsDropShadowPreview} from '../../components/effects/effects-drop-sh
 import {EffectsDuotonePreview} from '../../components/effects/effects-duotone-preview';
 import {EffectsEmbossPreview} from '../../components/effects/effects-emboss-preview';
 import {EffectsEvolvePreview} from '../../components/effects/effects-evolve-preview';
+import {EffectsExposurePreview} from '../../components/effects/effects-exposure-preview';
 import {EffectsFisheyePreview} from '../../components/effects/effects-fisheye-preview';
 import {EffectsFlannelPreview} from '../../components/effects/effects-flannel-preview';
 import {EffectsGlowPreview} from '../../components/effects/effects-glow-preview';
@@ -26,6 +28,7 @@ import {EffectsHalftoneLinearGradientPreview} from '../../components/effects/eff
 import {EffectsHalftonePreview} from '../../components/effects/effects-halftone-preview';
 import {EffectsHuePreview} from '../../components/effects/effects-hue-preview';
 import {EffectsInvertPreview} from '../../components/effects/effects-invert-preview';
+import {EffectsLevelsPreview} from '../../components/effects/effects-levels-preview';
 import {EffectsLightLeakPreview} from '../../components/effects/effects-light-leak-preview';
 import {
 	EffectsLightTrailPreview,
@@ -63,6 +66,7 @@ import {
 	EffectsRadialProgressivePixelatePreview,
 	RADIAL_PROGRESSIVE_PIXELATE_PREVIEW_PARAMS,
 } from '../../components/effects/effects-radial-progressive-pixelate-preview';
+import {EffectsRegionBlurPreview} from '../../components/effects/effects-region-blur-preview';
 import {EffectsRingsPreview} from '../../components/effects/effects-rings-preview';
 import {
 	EffectsRoughenEdgesPreview,
@@ -72,6 +76,7 @@ import {
 import {EffectsSaturationPreview} from '../../components/effects/effects-saturation-preview';
 import {EffectsScalePreview} from '../../components/effects/effects-scale-preview';
 import {EffectsScanlinesPreview} from '../../components/effects/effects-scanlines-preview';
+import {EffectsShadowsHighlightsPreview} from '../../components/effects/effects-shadows-highlights-preview';
 import {EffectsShinePreview} from '../../components/effects/effects-shine-preview';
 import {
 	EffectsShrinkwrapPreview,
@@ -91,9 +96,11 @@ import {
 } from '../../components/effects/effects-translate-preview';
 import {EffectsTvSignalOffPreview} from '../../components/effects/effects-tv-signal-off-preview';
 import {EffectsVenetianBlindsPreview} from '../../components/effects/effects-venetian-blinds-preview';
+import {EffectsVibrancePreview} from '../../components/effects/effects-vibrance-preview';
 import {EffectsVignettePreview} from '../../components/effects/effects-vignette-preview';
 import {EffectsWavePreview} from '../../components/effects/effects-wave-preview';
 import {EffectsWavesPreview} from '../../components/effects/effects-waves-preview';
+import {EffectsWhiteBalancePreview} from '../../components/effects/effects-white-balance-preview';
 import {EffectsWhiteNoisePreview} from '../../components/effects/effects-white-noise-preview';
 import {EffectsZigzagPreview} from '../../components/effects/effects-zigzag-preview';
 import {EffectsZoomBlurPreview} from '../../components/effects/effects-zoom-blur-preview';
@@ -240,6 +247,25 @@ export const RemotionRoot: React.FC = () => {
 					}}
 				/>
 				<Still
+					id="effects-color-correction-preview"
+					component={EffectsColorCorrectionPreview}
+					width={1280}
+					height={720}
+					defaultProps={{
+						exposure: 0.35,
+						contrast: 1.2,
+						pivot: 0.45,
+						shadows: 0.4,
+						highlights: -0.3,
+						whites: 0.2,
+						blacks: -0.1,
+						temperature: 0.15,
+						tint: 0.05,
+						saturation: 1.1,
+						vibrance: 0.35,
+					}}
+				/>
+				<Still
 					id="effects-contrast-preview"
 					component={EffectsContrastPreview}
 					width={1280}
@@ -279,6 +305,41 @@ export const RemotionRoot: React.FC = () => {
 						direction: 'left',
 						feather: 0.18,
 					}}
+				/>
+				<Still
+					id="effects-exposure-preview"
+					component={EffectsExposurePreview}
+					width={1280}
+					height={720}
+					defaultProps={{stops: 1}}
+				/>
+				<Still
+					id="effects-levels-preview"
+					component={EffectsLevelsPreview}
+					width={1280}
+					height={720}
+					defaultProps={{blackPoint: 0.1, whitePoint: 0.9, gamma: 1.4}}
+				/>
+				<Still
+					id="effects-shadows-highlights-preview"
+					component={EffectsShadowsHighlightsPreview}
+					width={1280}
+					height={720}
+					defaultProps={{shadows: 0.8, highlights: -0.5}}
+				/>
+				<Still
+					id="effects-white-balance-preview"
+					component={EffectsWhiteBalancePreview}
+					width={1280}
+					height={720}
+					defaultProps={{temperature: 0.8, tint: 0.2}}
+				/>
+				<Still
+					id="effects-vibrance-preview"
+					component={EffectsVibrancePreview}
+					width={1280}
+					height={720}
+					defaultProps={{amount: 0.8}}
 				/>
 				<Still
 					id="effects-venetian-blinds-preview"
@@ -499,6 +560,19 @@ export const RemotionRoot: React.FC = () => {
 					width={1280}
 					height={720}
 					defaultProps={RADIAL_PROGRESSIVE_BLUR_PREVIEW_PARAMS}
+				/>
+				<Still
+					id="effects-region-blur-preview"
+					component={EffectsRegionBlurPreview}
+					width={1280}
+					height={720}
+					defaultProps={{
+						topLeft: [0.28, 0.18],
+						bottomRight: [0.72, 0.82],
+						blurRadius: 60,
+						feather: 8,
+						roundness: 0.5,
+					}}
 				/>
 				<Still
 					id="effects-radial-progressive-pixelate-preview"
@@ -886,46 +960,6 @@ export const RemotionRoot: React.FC = () => {
 				height={630}
 				id="template-all"
 			/>
-			{/* <Composition
-				component={HomepageVideoComp}
-				id="HomepageVideo"
-				width={640}
-				height={360}
-				durationInFrames={120}
-				fps={30}
-				defaultProps={{
-					theme: 'dark',
-					cardOrder: [0, 1, 2, 3],
-					location: {
-						country: 'CH',
-						city: 'Zurich',
-						longitude: '8.5348',
-						latitude: '47.3857',
-					},
-					trending: {
-						repos: [
-							'open-mmlab/Amphion',
-							'usememos/memos',
-							'meta-llama/llama-recipes',
-						],
-						date: 1730369257379,
-						temperatureInCelsius: 11,
-						countryLabel: 'Switzerland',
-						countryPaths: [
-							{
-								class: 'CH',
-								d: 'M1034.4 197.5l0.2 1.1-0.7 1.5 2.3 1.2 2.6 0.2-0.3 2.5-2.1 1.1-3.8-0.8-1 2.5-2.4 0.2-0.9-1-2.7 2.2-2.5 0.3-2.2-1.4-1.8-2.7-2.4 1 0-2.9 3.6-3.5-0.2-1.6 2.3 0.6 1.3-1.1 4.2 0 1-1.3 5.5 1.9z',
-							},
-						],
-					},
-					emojiIndex: 0,
-					onClickLeft: () => {},
-					onClickRight: () => {},
-					onToggle: () => {},
-					updateCardOrder: () => {},
-				}}
-				calculateMetadata={calculateMetadata}
-			/> */}
 		</>
 	);
 };

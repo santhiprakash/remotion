@@ -6,16 +6,26 @@ const splitWords = (inputCaptions: Caption[]): Caption[] => {
 	for (let i = 0; i < inputCaptions.length; i++) {
 		const w = inputCaptions[i];
 		const words = w.text.split(' ');
+		let first = true;
 
 		for (let j = 0; j < words.length; j++) {
 			const word = words[j];
+
+			// Skip empty strings produced by split(' ') on leading/trailing
+			// spaces (e.g. " Remotion's" → ['', "Remotion's"])
+			if (word === '') {
+				continue;
+			}
+
 			captions.push({
-				text: j === 0 ? ` ${word}` : word,
+				text: first ? ` ${word}` : word,
 				startMs: w.startMs,
 				endMs: w.endMs,
 				confidence: w.confidence,
 				timestampMs: w.timestampMs,
 			});
+
+			first = false;
 		}
 	}
 

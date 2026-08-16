@@ -9,6 +9,7 @@ import {writeFileAndNotifyFileWatchers} from '../../file-watcher';
 import {resolveFileInsideProject} from '../../helpers/resolve-file-inside-project';
 import type {ApiHandler} from '../api-types';
 import {formatLogFileLocation} from '../format-log-file-location';
+import {broadcastSequenceNodePathMutation} from '../sequence-node-path-mutation';
 import {
 	printUndoHint,
 	pushToUndoStack,
@@ -20,7 +21,11 @@ import {withSourceFileWriteQueue} from './source-file-write-queue';
 export const splitJsxSequenceHandler: ApiHandler<
 	SplitJsxSequenceRequest,
 	SplitJsxSequenceResponse
-> = ({input: {fileName, nodePath, splitFrame}, remotionRoot, logLevel}) =>
+> = ({
+	input: {fileName, nodePath, sequenceKeys, splitFrame},
+	remotionRoot,
+	logLevel,
+}) =>
 	withSourceFileWriteQueue(async () => {
 		try {
 			RenderInternals.Log.trace(
@@ -35,11 +40,20 @@ export const splitJsxSequenceHandler: ApiHandler<
 
 			const fileContents = readFileSync(absolutePath, 'utf-8');
 
-			const {output, formatted, nodeLabel, logLine} = await splitJsxSequence({
-				input: fileContents,
-				nodePath,
-				splitFrame,
-			});
+			const {output, formatted, nodeLabel, logLine, nodePathRemappings} =
+				await splitJsxSequence({
+					input: fileContents,
+					nodePath,
+					sequenceKeys,
+					splitFrame,
+				});
+			const nodePathMutation = broadcastSequenceNodePathMutation([
+				{
+					absolutePath,
+					remappings: nodePathRemappings,
+					restoredNodePaths: [],
+				},
+			]);
 
 			pushToUndoStack({
 				filePath: absolutePath,
@@ -54,9 +68,15 @@ export const splitJsxSequenceHandler: ApiHandler<
 				},
 				entryType: 'split-jsx-sequence',
 				suppressHmrOnFileRestore: false,
+				nodePathRemappings,
 			});
 			suppressUndoStackInvalidation(absolutePath);
-			writeFileAndNotifyFileWatchers(absolutePath, output, undefined);
+			writeFileAndNotifyFileWatchers({
+				file: absolutePath,
+				content: output,
+				originatorClientId: undefined,
+				metadata: {skipSequencePropsUpdate: true},
+			});
 
 			const locationLabel = formatLogFileLocation({
 				remotionRoot,
@@ -84,6 +104,7 @@ export const splitJsxSequenceHandler: ApiHandler<
 
 			return {
 				success: true,
+				nodePathMutation,
 			};
 		} catch (err) {
 			return {

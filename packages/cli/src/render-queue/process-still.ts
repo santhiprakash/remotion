@@ -86,5 +86,9 @@ export const processStill = async ({
 		keyboardShortcutsEnabled,
 		rspack: fixedConfig.rspack,
 		shouldCache,
+		bundlerOverride: fixedConfig.bundlerOverride,
+		rspackOverride: fixedConfig.rspackOverride,
+		webpackOverride: fixedConfig.webpackOverride,
+		licenseKey: job.licenseKey,
 	});
 };

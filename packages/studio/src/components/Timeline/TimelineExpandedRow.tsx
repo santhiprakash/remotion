@@ -33,7 +33,7 @@ const rowLabel: React.CSSProperties = {
 	userSelect: 'none',
 };
 
-export const TimelineExpandedRow: React.FC<{
+type TimelineExpandedRowProps = {
 	readonly node: TimelineTreeNode;
 	readonly depth: number;
 	readonly nestedDepth: number;
@@ -45,7 +45,9 @@ export const TimelineExpandedRow: React.FC<{
 	readonly schema: InteractivitySchema;
 	readonly keyframeDisplayOffset: number;
 	readonly keyframeControlsMode?: TimelineKeyframeControlsMode;
-}> = ({
+};
+
+const TimelineExpandedRowInner: React.FC<TimelineExpandedRowProps> = ({
 	node,
 	depth,
 	nestedDepth,
@@ -118,6 +120,7 @@ export const TimelineExpandedRow: React.FC<{
 				onSelect={selection.onSelect}
 				showSelectedBackground
 				containsSelection={false}
+				isFieldRow={false}
 				outerHeight={null}
 			>
 				<span style={labelStyle}>{node.label}</span>
@@ -174,9 +177,12 @@ export const TimelineExpandedRow: React.FC<{
 			onSelect={selection.onSelect}
 			showSelectedBackground
 			containsSelection={false}
+			isFieldRow={false}
 			outerHeight={null}
 		>
 			<span style={labelStyle}>{node.label}</span>
 		</TimelineRowChrome>
 	);
 };
+
+export const TimelineExpandedRow = React.memo(TimelineExpandedRowInner);

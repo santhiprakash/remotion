@@ -7,10 +7,14 @@ import React, {
 	useState,
 } from 'react';
 import {Internals} from 'remotion';
+import {getStaticFiles} from '../../api/get-static-files';
+import {writeStaticFile} from '../../api/write-static-file';
+import {installRequiredPackages} from '../../helpers/install-required-package';
 import {
 	getUniqueCompositionName,
 	useCreateComposition,
 } from '../../helpers/use-create-composition';
+import type {CanvasCaptureImport} from '../../state/modals';
 import {Spacing} from '../layout';
 import {ModalFooterContainer} from '../ModalFooter';
 import {ModalHeader} from '../ModalHeader';
@@ -40,7 +44,8 @@ const NewCompositionLoaded: React.FC<{
 	readonly folderName: string | null;
 	readonly parentName: string | null;
 	readonly stack: string | null;
-}> = ({folderName, parentName, stack}) => {
+	readonly canvasCapture: CanvasCaptureImport | null;
+}> = ({canvasCapture, folderName, parentName, stack}) => {
 	const {compositions} = useContext(Internals.CompositionManager);
 	const resolvedComposition = Internals.useResolvedVideoConfig(null);
 	const initialComposition =
@@ -48,7 +53,10 @@ const NewCompositionLoaded: React.FC<{
 		resolvedComposition?.type === 'success-and-refreshing'
 			? resolvedComposition.result
 			: null;
-	const initialDimensions = getNewCompositionDefaults(initialComposition);
+	const initialDimensions = getNewCompositionDefaults(
+		initialComposition,
+		canvasCapture?.durationInSeconds ?? null,
+	);
 	const [newId, setName] = useState(() =>
 		getUniqueCompositionName(compositions),
 	);
@@ -135,7 +143,51 @@ const NewCompositionLoaded: React.FC<{
 		parentName,
 		selectedFrameRate,
 		size,
+		canvasCapture:
+			canvasCapture === null
+				? null
+				: {
+						data: canvasCapture.data,
+						videoFileName: canvasCapture.file.name,
+						videoHeight: canvasCapture.height,
+						videoWidth: canvasCapture.width,
+					},
 	});
+
+	const createCanvasCaptureComposition = useCallback(
+		async ({
+			signal,
+			symbolicatedStack,
+		}: Parameters<typeof createComposition>[0]) => {
+			if (canvasCapture !== null) {
+				const existingFile = getStaticFiles().find(
+					(file) => file.name === canvasCapture.file.name,
+				);
+				if (
+					existingFile !== undefined &&
+					existingFile.sizeInBytes !== canvasCapture.file.size
+				) {
+					throw new Error(
+						`File with name ${canvasCapture.file.name} already exists and is different`,
+					);
+				}
+
+				await installRequiredPackages([
+					{name: '@remotion/media', version: null},
+					{name: '@remotion/mac-cursors', version: null},
+				]);
+				if (existingFile === undefined) {
+					await writeStaticFile({
+						contents: await canvasCapture.file.arrayBuffer(),
+						filePath: canvasCapture.file.name,
+					});
+				}
+			}
+
+			return createComposition({signal, symbolicatedStack});
+		},
+		[canvasCapture, createComposition],
+	);
 
 	const onSubmit: React.FormEventHandler<HTMLFormElement> = useCallback((e) => {
 		e.preventDefault();
@@ -145,7 +197,11 @@ const NewCompositionLoaded: React.FC<{
 
 	return (
 		<>
-			<ModalHeader title="New composition" />
+			<ModalHeader
+				title={
+					canvasCapture === null ? 'New composition' : 'Import Canvas Capture'
+				}
+			/>
 			<form onSubmit={onSubmit}>
 				<div style={content}>
 					{folderPath ? (
@@ -283,7 +339,7 @@ const NewCompositionLoaded: React.FC<{
 						valid={valid}
 						onSuccess={null}
 						applyCodemod={({signal, symbolicatedStack}) =>
-							createComposition({
+							createCanvasCaptureComposition({
 								signal,
 								symbolicatedStack,
 							})
@@ -300,10 +356,12 @@ export const NewComposition: React.FC<{
 	readonly folderName: string | null;
 	readonly parentName: string | null;
 	readonly stack: string | null;
-}> = ({folderName, parentName, stack}) => {
+	readonly canvasCapture: CanvasCaptureImport | null;
+}> = ({canvasCapture, folderName, parentName, stack}) => {
 	return (
 		<DismissableModal>
 			<NewCompositionLoaded
+				canvasCapture={canvasCapture}
 				folderName={folderName}
 				parentName={parentName}
 				stack={stack}

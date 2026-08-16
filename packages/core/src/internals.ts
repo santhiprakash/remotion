@@ -70,6 +70,8 @@ import {
 	getComponentsToAddStacksTo,
 	getSequenceComponent,
 	getSingleChildComponent,
+	getStackForControls,
+	REMOTION_INTERNAL_STACK_PROP,
 } from './enable-sequence-stack-traces.js';
 import {findPropsToDelete} from './find-props-to-delete.js';
 import {
@@ -99,6 +101,7 @@ import {
 	hiddenField,
 	premountSchema,
 	sequencePremountSchema,
+	sequenceCropSchema,
 	sequenceSchema,
 	sequenceStyleSchema,
 	sequenceVisualStyleSchema,
@@ -120,7 +123,7 @@ import {MaxMediaCacheSizeContext} from './max-video-cache-size.js';
 import type {NonceHistory} from './nonce.js';
 import {NonceContext} from './nonce.js';
 import {playbackLogging} from './playback-logging.js';
-import {portalNode} from './portal-node.js';
+import {portalNode, setPortalNodeCurrentScale} from './portal-node.js';
 import {PrefetchProvider} from './prefetch-state.js';
 import {usePreload} from './prefetch.js';
 import {PremountContext} from './PremountContext.js';
@@ -128,6 +131,10 @@ import {getRoot, waitForRoot} from './register-root.js';
 import type {RemotionEnvironment} from './remotion-environment-context.js';
 import {RemotionEnvironmentContext} from './remotion-environment-context.js';
 import {RemotionRootContexts} from './RemotionRoot.js';
+import {
+	makeRenderResourceManager,
+	RenderResourceManagerContext,
+} from './render-resource-manager.js';
 import {
 	RenderAssetManager,
 	RenderAssetManagerProvider,
@@ -142,6 +149,7 @@ import {
 	resolveCompositionsRef,
 	useResolvedVideoConfig,
 } from './ResolveCompositionConfig.js';
+import {resolveSequenceCrop} from './sequence-crop.js';
 import type {
 	OverrideIdToNodePaths,
 	OverrideToNodePathGetters,
@@ -172,6 +180,7 @@ import {
 	type CanUpdateSequencePropsResponseTrue,
 	type SequenceNodePath,
 	type SequencePropsSubscriptionKey,
+	type SequencePropsStatusRemapping,
 	type VideoConfigValues,
 } from './SequenceManager.js';
 import {setupEnvVariables} from './setup-env-variables.js';
@@ -187,11 +196,14 @@ import {
 	PlaybackRateContext,
 	SetTimelineContext,
 	TimelineContext,
+	TimelineImperativeContext,
 	type PlaybackRateContextValue,
 	type SetTimelineContextValue,
+	type TimelineImperativeContextValue,
 	type TimelineContextValue,
 } from './TimelineContext.js';
 import {truthy} from './truthy.js';
+import {useCropStyle} from './use-crop-style.js';
 import {
 	calculateScale,
 	CurrentScaleContext,
@@ -279,6 +291,8 @@ const compositionSelectorRef = createRef<{
 // API and are less likely to use it
 export const Internals = {
 	MaxMediaCacheSizeContext,
+	makeRenderResourceManager,
+	RenderResourceManagerContext,
 	useUnsafeVideoConfig,
 	useFrameForVolumeProp,
 	useTimelinePosition: TimelinePosition.useTimelinePosition,
@@ -307,6 +321,7 @@ export const Internals = {
 	sequenceStyleSchema,
 	sequenceVisualStyleSchema,
 	sequencePremountSchema,
+	sequenceCropSchema,
 	textSchema,
 	transformSchema,
 	premountSchema,
@@ -343,6 +358,7 @@ export const Internals = {
 	getPreviewDomElement,
 	compositionsRef,
 	portalNode,
+	setPortalNodeCurrentScale,
 	waitForRoot,
 	SetTimelineContext,
 	CanUseRemotionHooksProvider,
@@ -376,6 +392,8 @@ export const Internals = {
 	getComponentsToAddStacksTo,
 	getSequenceComponent,
 	getSingleChildComponent,
+	getStackForControls,
+	REMOTION_INTERNAL_STACK_PROP,
 	CurrentScaleContext,
 	PixelDensityContext,
 	PreviewSizeContext,
@@ -401,6 +419,7 @@ export const Internals = {
 	TimelinePosition,
 	DelayRenderContextType,
 	TimelineContext,
+	TimelineImperativeContext,
 	PlaybackRateContext,
 	AbsoluteTimeContext,
 	RenderAssetManagerProvider,
@@ -431,6 +450,8 @@ export const Internals = {
 	durationInFramesField,
 	freezeField,
 	fromField,
+	resolveSequenceCrop,
+	useCropStyle,
 } as const;
 
 export type {
@@ -478,6 +499,7 @@ export type {
 	InteractivitySchemaField,
 	SequenceNodePath,
 	SequencePropsSubscriptionKey,
+	SequencePropsStatusRemapping,
 	VideoConfigValues,
 	InteractivitySchema,
 	SerializedJSONWithCustomFields,
@@ -486,6 +508,7 @@ export type {
 	TCompMetadata,
 	TComposition,
 	TimelineContextValue,
+	TimelineImperativeContextValue,
 	TRenderAsset,
 	TSequence,
 	VisibleFieldSchema,

@@ -29,11 +29,59 @@ test('registers border longhands and side-specific blockers', () => {
 	expect(border?.isUnsupportedProperty('borderRadius')).toBe(false);
 });
 
+test('registers the background color longhand', () => {
+	const background = getCssShorthandForLonghand({
+		parentKey: 'style',
+		longhand: 'backgroundColor',
+	});
+
+	expect(background?.shorthand).toBe('background');
+	expect(background?.longhands).toEqual([
+		'backgroundColor',
+		'backgroundImage',
+		'backgroundPosition',
+		'backgroundSize',
+		'backgroundRepeat',
+		'backgroundOrigin',
+		'backgroundClip',
+		'backgroundAttachment',
+	]);
+	expect(background?.isUnsupportedProperty('backgroundImage')).toBe(false);
+});
+
+test('registers border radius longhands and logical-property blockers', () => {
+	const borderRadius = getCssShorthandForLonghand({
+		parentKey: 'style',
+		longhand: 'borderTopLeftRadius',
+	});
+
+	expect(borderRadius?.shorthand).toBe('borderRadius');
+	expect(borderRadius?.longhands).toEqual([
+		'borderTopLeftRadius',
+		'borderTopRightRadius',
+		'borderBottomRightRadius',
+		'borderBottomLeftRadius',
+	]);
+	expect(borderRadius?.isUnsupportedProperty('borderStartStartRadius')).toBe(
+		true,
+	);
+	expect(borderRadius?.isUnsupportedProperty('borderTopLeftRadius')).toBe(
+		false,
+	);
+});
+
 test('selects shorthand migrations from dot-notation update keys', () => {
 	expect(
-		getCssShorthandsForUpdates(['style.opacity', 'style.borderColor']).map(
+		getCssShorthandsForUpdates([
+			'style.opacity',
+			'style.backgroundColor',
+			'style.borderColor',
+		]).map((property) => property.shorthand),
+	).toEqual(['background', 'border']);
+	expect(getCssShorthandsForUpdates(['style.opacity'])).toEqual([]);
+	expect(
+		getCssShorthandsForUpdates(['style.borderBottomRightRadius']).map(
 			(property) => property.shorthand,
 		),
-	).toEqual(['border']);
-	expect(getCssShorthandsForUpdates(['style.opacity'])).toEqual([]);
+	).toEqual(['borderRadius']);
 });

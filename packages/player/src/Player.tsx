@@ -100,6 +100,7 @@ export type PlayerProps<
 	readonly sampleRate?: number;
 	readonly volumePersistenceKey?: string;
 	readonly initialVolume?: number;
+	readonly _experimentalKeepAudioContextAlive?: boolean;
 } & CompProps<Props> &
 	PropsIfHasProps<Schema, Props>;
 
@@ -172,6 +173,7 @@ const PlayerFn = <
 		sampleRate = 48000,
 		volumePersistenceKey,
 		initialVolume,
+		_experimentalKeepAudioContextAlive = false,
 		...componentProps
 	}: PlayerProps<Schema, Props>,
 	ref: RefObject<PlayerRef>,
@@ -223,7 +225,6 @@ const PlayerFn = <
 		[PLAYER_COMP_ID]: initialFrame ?? 0,
 	}));
 	const [playing, setPlaying] = useState<boolean>(false);
-	const [rootId] = useState<string>('player-comp');
 	const rootRef = useRef<PlayerRef>(null);
 	const audioAndVideoTags = useRef<PlayableMediaTag[]>([]);
 	const imperativePlaying = useRef(false);
@@ -392,11 +393,10 @@ const PlayerFn = <
 		return {
 			frame,
 			playing,
-			rootId,
 			imperativePlaying,
 			audioAndVideoTags,
 		};
-	}, [frame, playing, rootId]);
+	}, [frame, playing]);
 
 	const playbackRateContextValue = useMemo((): PlaybackRateContextValue => {
 		return {
@@ -451,6 +451,7 @@ const PlayerFn = <
 				logLevel={logLevel}
 				audioLatencyHint={audioLatencyHint}
 				sampleRate={sampleRate}
+				_experimentalKeepAudioContextAlive={_experimentalKeepAudioContextAlive}
 				volumePersistenceKey={volumePersistenceKey}
 				initialVolume={initialVolume}
 				inputProps={actualInputProps}

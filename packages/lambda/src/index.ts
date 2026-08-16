@@ -1,4 +1,5 @@
 import type {
+	AwsPartition,
 	AwsRegion,
 	CustomCredentials,
 	DeleteFunctionInput,
@@ -46,7 +47,7 @@ import type {
 } from './api/deploy-function';
 import {deployFunction} from './api/deploy-function';
 import type {DeploySiteInput, DeploySiteOutput} from './api/deploy-site';
-import {deploySite} from './api/deploy-site';
+import {deploySite as deploySiteImplementation} from './api/deploy-site';
 import type {
 	DeploySiteFromBundleInput,
 	DeploySiteFromBundleOutput,
@@ -76,6 +77,12 @@ import {
 } from './internals';
 
 export type {WebhookPayload} from '@remotion/lambda-client';
+
+/**
+ * @deprecated Use `bundle()` from `@remotion/bundler`, then pass its output to `deploySiteFromBundle()`.
+ */
+const deploySite: (args: DeploySiteInput) => DeploySiteOutput =
+	deploySiteImplementation;
 
 /**
  * @deprecated Import this from `@remotion/lambda-client` instead
@@ -160,6 +167,7 @@ export {
 	validateWebhookSignature,
 };
 export type {
+	AwsPartition,
 	AwsRegion,
 	CustomCredentials,
 	DeleteFunctionInput,
@@ -197,4 +205,5 @@ export type {
 	SimulatePermissionsOutput,
 };
 
+export type {GetPolicyOptions} from './api/iam-validation/suggested-policy';
 export {_InternalOverallRenderProgress};

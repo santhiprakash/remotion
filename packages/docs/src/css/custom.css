@@ -223,8 +223,9 @@ code {
 }
 
 .deprecated-item > div > a::after,
+.unmaintained-item > div > a::after,
+.unmaintained-item > a::after,
 .deprecated-item > a::after {
-	content: 'Deprecated';
 	font-size: 12px;
 	opacity: 0.4;
 	border: 1px solid;
@@ -235,6 +236,16 @@ code {
 	margin-left: 6px;
 	border-radius: 4px;
 	transform: none !important;
+}
+
+.deprecated-item > div > a::after,
+.deprecated-item > a::after {
+	content: 'Deprecated';
+}
+
+.unmaintained-item > div > a::after,
+.unmaintained-item > a::after {
+	content: 'Unmaintained';
 }
 
 .wip-item > div > a::after,
@@ -333,6 +344,10 @@ code {
 .remotion-footer__column {
 	min-width: 0;
 	margin-bottom: 0;
+}
+
+.remotion-footer__column .footer__items {
+	font-family: 'GTPlanar';
 }
 
 @media screen and (max-width: 1199px) {

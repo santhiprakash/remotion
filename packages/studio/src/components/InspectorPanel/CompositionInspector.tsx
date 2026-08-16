@@ -1,8 +1,17 @@
-import React, {useContext, useEffect, useMemo, useState} from 'react';
+import React, {
+	useCallback,
+	useContext,
+	useEffect,
+	useMemo,
+	useState,
+} from 'react';
 import type {_InternalTypes} from 'remotion';
-import {studioInteractivityEnabled} from '../../helpers/interactivity-enabled';
+import {StudioServerConnectionCtx} from '../../helpers/client-id';
+import {isStudioInteractivityEnabled} from '../../helpers/interactivity-enabled';
+import {BrowseElementsIcon} from '../../icons/browse-elements';
 import {PicIcon} from '../../icons/frame';
 import {SolidIcon} from '../../icons/solid';
+import {FilmIcon} from '../../icons/video';
 import {VisualControlsContext} from '../../visual-controls/VisualControls';
 import {DefaultPropsEditor} from '../DefaultPropsEditor';
 import {useZodIfPossible} from '../get-zod-if-possible';
@@ -47,17 +56,45 @@ const actionIconStyle: React.CSSProperties = {
 	width: 18,
 };
 
-const CompositionActions: React.FC = () => {
+const browseElementsIconStyle: React.CSSProperties = {
+	height: 22,
+	width: 22,
+};
+
+const browseElementsIconContainerStyle: React.CSSProperties = {
+	height: 22,
+	marginLeft: -2,
+	marginRight: -2,
+	width: 22,
+};
+
+const CompositionActions: React.FC<{
+	readonly readOnlyStudio: boolean;
+}> = ({readOnlyStudio}) => {
 	const {
 		canInsertAsset,
+		canInsertComposition,
 		canInsertSolid,
 		canShowInsertAsset,
+		canShowInsertComposition,
 		canShowInsertSolid,
 		insertAsset,
+		insertComposition,
 		insertSolid,
 	} = useCompositionActions();
 
-	if (!canShowInsertAsset && !canShowInsertSolid) {
+	const openElementsLibrary = useCallback(() => {
+		window.open(
+			'https://www.remotion.dev/elements',
+			'_blank',
+			'noopener,noreferrer',
+		);
+	}, []);
+
+	if (
+		(readOnlyStudio && !canShowInsertSolid) ||
+		(!canShowInsertAsset && !canShowInsertComposition && !canShowInsertSolid)
+	) {
 		return null;
 	}
 
@@ -85,6 +122,30 @@ const CompositionActions: React.FC = () => {
 					Add asset...
 				</InspectorInlineAction>
 			) : null}
+			{canShowInsertComposition ? (
+				<InspectorInlineAction
+					disabled={!canInsertComposition}
+					onClick={insertComposition}
+					renderIcon={(color) => (
+						<FilmIcon color={color} style={actionIconStyle} />
+					)}
+				>
+					Add composition...
+				</InspectorInlineAction>
+			) : null}
+			{canShowInsertAsset ? (
+				<InspectorInlineAction
+					disabled={false}
+					iconContainerStyle={browseElementsIconContainerStyle}
+					onClick={openElementsLibrary}
+					renderIcon={(color) => (
+						<BrowseElementsIcon color={color} style={browseElementsIconStyle} />
+					)}
+					title="Open the Remotion Elements library in a new tab. Install an Element there to send it to this composition."
+				>
+					Browse Elements...
+				</InspectorInlineAction>
+			) : null}
 		</InspectorActionSection>
 	);
 };
@@ -92,8 +153,9 @@ const CompositionActions: React.FC = () => {
 const CompositionDefaultPropsSection: React.FC<{
 	readonly composition: _InternalTypes['AnyComposition'];
 	readonly currentDefaultProps: Record<string, unknown>;
+	readonly readOnlyStudio: boolean;
 	readonly setDefaultProps: UpdaterFunction<Record<string, unknown>>;
-}> = ({composition, currentDefaultProps, setDefaultProps}) => {
+}> = ({composition, currentDefaultProps, readOnlyStudio, setDefaultProps}) => {
 	const z = useZodIfPossible();
 	const canSaveDefaultProps = useContext(ObserveDefaultPropsContext);
 	const [defaultPropsMode, setDefaultPropsMode] =
@@ -150,7 +212,7 @@ const CompositionDefaultPropsSection: React.FC<{
 		showCannotSaveDefaultPropsWarning: canShowDefaultPropsSection,
 	});
 
-	if (!canShowDefaultPropsSection) {
+	if (readOnlyStudio || !canShowDefaultPropsSection) {
 		return null;
 	}
 
@@ -206,10 +268,14 @@ const CompositionDefaultPropsSection: React.FC<{
 	);
 };
 
-const CompositionVisualControlsSection: React.FC = () => {
+const CompositionVisualControlsSection: React.FC<{
+	readonly readOnlyStudio: boolean;
+}> = ({readOnlyStudio}) => {
 	const {handles: visualControlHandles} = useContext(VisualControlsContext);
 	const hasVisualControls =
-		studioInteractivityEnabled && Object.keys(visualControlHandles).length > 0;
+		!readOnlyStudio &&
+		isStudioInteractivityEnabled() &&
+		Object.keys(visualControlHandles).length > 0;
 
 	if (!hasVisualControls) {
 		return null;
@@ -232,6 +298,8 @@ export const CompositionInspector: React.FC<{
 	readonly readOnlyStudio: boolean;
 	readonly setDefaultProps: UpdaterFunction<Record<string, unknown>>;
 }> = ({composition, currentDefaultProps, readOnlyStudio, setDefaultProps}) => {
+	const {previewServerState} = useContext(StudioServerConnectionCtx);
+
 	return (
 		<div style={scrollableContainer} className={VERTICAL_SCROLLBAR_CLASSNAME}>
 			<div style={inspectorOverviewSection}>
@@ -239,17 +307,18 @@ export const CompositionInspector: React.FC<{
 				<InspectorSectionDivider />
 				<CompositionMetadata
 					compositionId={composition.id}
-					disabled={readOnlyStudio}
+					disabled={readOnlyStudio || previewServerState.type !== 'connected'}
 					stack={composition.stack}
 				/>
 			</div>
 			<CompositionDefaultPropsSection
 				composition={composition}
 				currentDefaultProps={currentDefaultProps}
+				readOnlyStudio={readOnlyStudio}
 				setDefaultProps={setDefaultProps}
 			/>
-			<CompositionVisualControlsSection />
-			<CompositionActions />
+			<CompositionVisualControlsSection readOnlyStudio={readOnlyStudio} />
+			<CompositionActions readOnlyStudio={readOnlyStudio} />
 		</div>
 	);
 };

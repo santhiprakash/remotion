@@ -279,6 +279,7 @@ const sidebars: SidebarsConfig = {
 				'effects/burlap',
 				'effects/checkerboard',
 				'effects/chromatic-aberration',
+				'effects/color-correction',
 				'effects/color-key',
 				'effects/contrast',
 				'effects/contour-lines',
@@ -288,6 +289,7 @@ const sidebars: SidebarsConfig = {
 				'effects/duotone',
 				'effects/emboss',
 				'effects/evolve',
+				'effects/exposure',
 				'effects/fisheye',
 				'effects/flannel',
 				'effects/glow',
@@ -297,10 +299,12 @@ const sidebars: SidebarsConfig = {
 				'effects/halftone-linear-gradient',
 				'effects/hue',
 				'effects/invert',
+				'effects/levels',
 				'effects/linear-gradient',
 				'effects/linear-gradient-tint',
 				'effects/linear-progressive-blur',
 				'effects/linear-progressive-pixelate',
+				'effects/light-leak',
 				'effects/light-trail',
 				'effects/lines',
 				'effects/liquid-contours',
@@ -313,23 +317,28 @@ const sidebars: SidebarsConfig = {
 				'effects/pixelate',
 				'effects/radial-progressive-blur',
 				'effects/radial-progressive-pixelate',
+				'effects/region-blur',
 				'effects/rings',
 				'effects/roughen-edges',
 				'effects/saturation',
 				'effects/scale',
 				'effects/scanlines',
+				'effects/shadows-highlights',
 				'effects/shine',
 				'effects/shrinkwrap',
 				'effects/skew',
 				'effects/speckle',
+				'effects/starburst',
 				'effects/thermal-vision',
 				'effects/tint',
 				'effects/tv-signal-off',
 				'effects/uv-translate',
 				'effects/venetian-blinds',
+				'effects/vibrance',
 				'effects/vignette',
 				'effects/wave',
 				'effects/waves',
+				'effects/white-balance',
 				'effects/white-noise',
 				'effects/xy-translate',
 				'effects/zigzag',
@@ -470,15 +479,6 @@ const sidebars: SidebarsConfig = {
 		},
 		{
 			type: 'category',
-			label: '@remotion/light-leaks',
-			link: {
-				type: 'doc',
-				id: 'light-leaks/light-leaks-api',
-			},
-			items: ['light-leaks/light-leak-effect', 'light-leaks/light-leak'],
-		},
-		{
-			type: 'category',
 			label: '@remotion/lottie',
 			link: {
 				type: 'doc',
@@ -491,6 +491,15 @@ const sidebars: SidebarsConfig = {
 				'lottie/lottie-remote',
 				'lottie/lottie-lottiefiles',
 			],
+		},
+		{
+			type: 'category',
+			label: '@remotion/mac-cursors',
+			link: {
+				type: 'doc',
+				id: 'mac-cursors/mac-cursors-api',
+			},
+			items: ['mac-cursors/mac-os-cursor'],
 		},
 		{
 			type: 'category',
@@ -768,15 +777,6 @@ const sidebars: SidebarsConfig = {
 		},
 		{
 			type: 'category',
-			label: '@remotion/starburst',
-			link: {
-				type: 'doc',
-				id: 'starburst/starburst-api',
-			},
-			items: ['starburst/starburst-effect', 'starburst/starburst-component'],
-		},
-		{
-			type: 'category',
 			label: '@remotion/studio',
 			link: {
 				type: 'doc',
@@ -799,6 +799,20 @@ const sidebars: SidebarsConfig = {
 				'studio/focus-default-props-path',
 				'studio/reevaluate-composition',
 				'studio/visual-control',
+			],
+		},
+		{
+			type: 'category',
+			label: '@remotion/studio-protocol',
+			link: {
+				type: 'doc',
+				id: 'studio-protocol/index',
+			},
+			items: [
+				'studio-protocol/create-element-payload',
+				'studio-protocol/set-studio-drag-data',
+				'studio-protocol/install-in-studio',
+				'studio-protocol/security',
 			],
 		},
 		{
@@ -828,6 +842,7 @@ const sidebars: SidebarsConfig = {
 			},
 			items: [
 				'three-canvas',
+				'three-webgpu-canvas',
 				'use-video-texture',
 				'use-offthread-video-texture',
 			],
@@ -865,6 +880,7 @@ const sidebars: SidebarsConfig = {
 					},
 					items: [
 						'transitions/presentations/fade',
+						'transitions/presentations/push-cut',
 						'transitions/presentations/slide',
 						'transitions/presentations/wipe',
 						'transitions/presentations/flip',
@@ -972,6 +988,15 @@ const sidebars: SidebarsConfig = {
 		},
 		{
 			type: 'category',
+			label: '@remotion/light-leaks (deprecated)',
+			link: {
+				type: 'doc',
+				id: 'light-leaks/light-leaks-api',
+			},
+			items: ['light-leaks/light-leak-effect', 'light-leaks/light-leak'],
+		},
+		{
+			type: 'category',
 			label: '@remotion/media-parser (deprecated)',
 			link: {
 				type: 'doc',
@@ -996,6 +1021,15 @@ const sidebars: SidebarsConfig = {
 				'media-parser/node-writer',
 				'media-parser/webcodecs-timescale',
 			],
+		},
+		{
+			type: 'category',
+			label: '@remotion/starburst (deprecated)',
+			link: {
+				type: 'doc',
+				id: 'starburst/starburst-api',
+			},
+			items: ['starburst/starburst-effect', 'starburst/starburst-component'],
 		},
 		{
 			type: 'category',
@@ -1177,6 +1211,7 @@ const sidebars: SidebarsConfig = {
 				'artifacts',
 				'metadata',
 				'hardware-acceleration',
+				'webgl',
 				'hdr',
 				'sample-rate',
 			],
@@ -1217,7 +1252,6 @@ const sidebars: SidebarsConfig = {
 				'client-side-rendering/html-in-canvas',
 				'client-side-rendering/page-responsiveness',
 				'client-side-rendering/cancellation',
-				'client-side-rendering/telemetry',
 				{
 					type: 'link',
 					href: '/docs/web-renderer',
@@ -1242,6 +1276,7 @@ const sidebars: SidebarsConfig = {
 				'lambda/authentication',
 				'lambda/permissions',
 				'lambda/region-selection',
+				'lambda/aws-china-regions',
 				'lambda/concurrency',
 				'lambda/runtime',
 				'lambda/disk-size',
@@ -1293,6 +1328,7 @@ const sidebars: SidebarsConfig = {
 				'lambda/bucket-naming',
 				'lambda/optimizing-cost',
 				'lambda/optimizing-speed',
+				'lambda/faster-progress-polling',
 				'lambda/proxy',
 				'lambda/limits',
 				'lambda/changelog',
@@ -1304,30 +1340,6 @@ const sidebars: SidebarsConfig = {
 			],
 		},
 		{
-			type: 'category',
-			label: 'Cloud Run',
-			link: {
-				type: 'doc',
-				id: 'cloudrun',
-			},
-			items: [
-				'cloudrun',
-				'cloudrun/status',
-				'cloudrun/setup',
-				'cloudrun/permissions',
-				'cloudrun/generate-env',
-				'cloudrun/region-selection',
-				'cloudrun/checklist',
-				'cloudrun/instancecount',
-				'cloudrun/multiple-buckets',
-				'cloudrun/limits',
-				'cloudrun/light-client',
-				'cloudrun/upgrading',
-				'cloudrun/uninstall',
-			],
-		},
-
-		{
 			type: 'html',
 			value:
 				'<hr style="margin-top: 4px; margin-bottom: 4px; border-bottom: none"/>', // The HTML to be rendered
@@ -1338,6 +1350,7 @@ const sidebars: SidebarsConfig = {
 			label: 'Studio',
 			items: [
 				'studio/studio',
+				'studio/open-in-editor',
 				'studio/shortcuts',
 				'studio/quick-switcher',
 				'studio/interactivity',
@@ -1408,6 +1421,7 @@ const sidebars: SidebarsConfig = {
 				'mediabunny/index',
 				'mediabunny/new-video',
 				'mediabunny/metadata',
+				'mediabunny/frame-rate',
 				'mediabunny/extract-thumbnail',
 				'mediabunny/extract-frames',
 				'mediabunny/can-decode',
@@ -1427,9 +1441,20 @@ const sidebars: SidebarsConfig = {
 			items: [
 				'ai/coding-agents',
 				'ai/skills',
-				'ai/claude-code-plugin',
-				'ai/codex-plugin',
-				'ai/kimi-code-plugin',
+				{
+					type: 'category',
+					label: 'Plugins',
+					link: {
+						type: 'doc',
+						id: 'ai/plugins',
+					},
+					items: [
+						'ai/claude-code-plugin',
+						'ai/codex-plugin',
+						'ai/cursor-plugin',
+						'ai/kimi-code-plugin',
+					],
+				},
 				'ai/bolt',
 				'ai/chatbot',
 				'ai/generate',
@@ -1513,7 +1538,6 @@ const sidebars: SidebarsConfig = {
 				'miscellaneous/embed-studio',
 				'miscellaneous/absolute-paths',
 				'miscellaneous/live-streaming',
-				'miscellaneous/parse-media-vs-get-video-metadata',
 				'miscellaneous/pexels',
 				'lovable-for-motion-graphics',
 			],
@@ -1637,32 +1661,33 @@ const sidebars: SidebarsConfig = {
 		},
 		{
 			type: 'category',
-			label: 'License, Pricing and Compliance',
+			label: 'License and terms',
 			link: {
 				type: 'doc',
 				id: 'license',
 			},
-			items: [
-				'license/pricing',
-				'license/faq',
-				'license/terms',
-				'license/privacy',
-				'license/dpa',
-				'license/dpia',
-				'acknowledgements',
-				{
-					type: 'category',
-					label: 'Accessibility',
-					link: {
-						type: 'doc',
-						id: 'accessibility',
-					},
-					items: [
-						'license/accessibility-statement-remotion-dev',
-						'license/accessibility-statement-remotion-pro',
-					],
-				},
-			],
+			collapsed: true,
+			items: ['license/pricing', 'license/faq', 'terms', 'telemetry'],
+		},
+		{
+			type: 'category',
+			label: 'Legal',
+			link: {
+				type: 'doc',
+				id: 'legal',
+			},
+			collapsed: true,
+			items: ['privacy', 'dpa', 'dpia', 'acknowledgements'],
+		},
+		{
+			type: 'category',
+			label: 'Accessibility',
+			link: {
+				type: 'doc',
+				id: 'accessibility',
+			},
+			collapsed: true,
+			items: ['accessibility/dev', 'accessibility/pro'],
 		},
 
 		{
@@ -1685,12 +1710,6 @@ const sidebars: SidebarsConfig = {
 		},
 		{
 			type: 'link',
-			href: '/docs/animated-captions',
-			label: 'Animated Captions',
-			className: 'pro-item',
-		},
-		{
-			type: 'link',
 			href: '/docs/recorder',
 			label: 'Recorder',
 		},
@@ -1699,6 +1718,30 @@ const sidebars: SidebarsConfig = {
 			value:
 				'<hr style="margin-top: 4px; margin-bottom: 4px; border-bottom: none"/>', // The HTML to be rendered
 			defaultStyle: true, // Use the default menu item styling
+		},
+		{
+			type: 'category',
+			label: 'Cloud Run',
+			className: 'unmaintained-item',
+			link: {
+				type: 'doc',
+				id: 'cloudrun',
+			},
+			items: [
+				'cloudrun',
+				'cloudrun/status',
+				'cloudrun/setup',
+				'cloudrun/permissions',
+				'cloudrun/generate-env',
+				'cloudrun/region-selection',
+				'cloudrun/checklist',
+				'cloudrun/instancecount',
+				'cloudrun/multiple-buckets',
+				'cloudrun/limits',
+				'cloudrun/light-client',
+				'cloudrun/upgrading',
+				'cloudrun/uninstall',
+			],
 		},
 		{
 			type: 'category',
@@ -1789,6 +1832,7 @@ const sidebars: SidebarsConfig = {
 				'editor-starter/persistance',
 				'editor-starter/captioning',
 				'editor-starter/rendering',
+				'editor-starter/client-side-rendering',
 				'editor-starter/backend-routes',
 				'editor-starter/production-checklist',
 				'editor-starter/features-not-included',
@@ -1817,22 +1861,6 @@ const sidebars: SidebarsConfig = {
 				'timeline/faq',
 				'timeline/render',
 			],
-		},
-	],
-	animatedCaptionsSidebar: [
-		{
-			type: 'link',
-			href: '/docs',
-			label: '← Back to the main docs',
-		},
-		{
-			type: 'category',
-			label: 'Animated Captions',
-			link: {
-				type: 'doc',
-				id: 'animated-captions/index',
-			},
-			items: ['animated-captions/faq'],
 		},
 	],
 	recorderSidebar: [

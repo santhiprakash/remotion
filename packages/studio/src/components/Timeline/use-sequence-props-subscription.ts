@@ -13,6 +13,7 @@ import type {OriginalPosition} from '../../error-overlay/react-overlay/utils/get
 import {StudioServerConnectionCtx} from '../../helpers/client-id';
 import {ExpandedTracksSetterContext} from '../ExpandedTracksProvider';
 import {acquireSequencePropsSubscription} from './sequence-props-subscription-store';
+import {shouldSubscribeToSourceFile} from './should-subscribe-to-source-file';
 
 export const useSequencePropsSubscription = ({
 	originalLocation,
@@ -20,12 +21,16 @@ export const useSequencePropsSubscription = ({
 	componentIdentity,
 	schema,
 	effects,
+	preferMappedNodePath,
+	stack,
 }: {
 	overrideId: string;
 	componentIdentity: JsxComponentIdentity | null;
 	schema: InteractivitySchema;
 	effects: InteractivitySchema[];
 	originalLocation: OriginalPosition | null;
+	preferMappedNodePath: boolean;
+	stack: string | null;
 }) => {
 	const {setPropStatuses} = useContext(Internals.VisualModeSettersContext);
 	const {setOverrideIdToNodePath} = useContext(
@@ -75,6 +80,7 @@ export const useSequencePropsSubscription = ({
 		if (
 			!clientId ||
 			!locationSource ||
+			!shouldSubscribeToSourceFile(locationSource) ||
 			!locationLine ||
 			locationColumn === null ||
 			!schema ||
@@ -93,8 +99,11 @@ export const useSequencePropsSubscription = ({
 			schema,
 			componentIdentity,
 			effects,
-			nodePath: nodePathAtResubscribe?.nodePath ?? null,
+			nodePath: preferMappedNodePath
+				? (nodePathAtResubscribe?.nodePath ?? null)
+				: null,
 			clientId,
+			stack,
 			videoConfigValues: {
 				durationInFrames: videoConfig.durationInFrames,
 				fps: videoConfig.fps,
@@ -150,9 +159,11 @@ export const useSequencePropsSubscription = ({
 		locationSource,
 		migrateExpandedTracksForSubscriptionKey,
 		overrideId,
+		preferMappedNodePath,
 		schema,
 		setPropStatuses,
 		setOverrideIdToNodePath,
+		stack,
 		videoConfig,
 	]);
 };

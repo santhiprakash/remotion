@@ -29,7 +29,7 @@ import {resolveConcurrency} from './get-concurrency';
 import {getFramesToRender} from './get-duration-from-frame-range';
 import {getFileExtensionFromCodec} from './get-extension-from-codec';
 import {getExtensionOfFilename} from './get-extension-of-filename';
-import {getRealFrameRange} from './get-frame-to-render';
+import {getRealFrameRanges} from './get-frame-to-render';
 import type {VideoImageFormat} from './image-format';
 import {
 	DEFAULT_VIDEO_IMAGE_FORMAT,
@@ -105,7 +105,7 @@ type MoreRenderMediaOptions = ToOptions<typeof optionsMap.renderMedia>;
 type EitherApiKeyOrLicenseKey =
 	true extends typeof NoReactInternals.ENABLE_V5_BREAKING_CHANGES
 		? {
-				licenseKey: string | null;
+				licenseKey?: string | null;
 			}
 		:
 				| {
@@ -495,18 +495,17 @@ const internalRenderMediaRaw = ({
 		width: widthEvenDimensions,
 	};
 
-	const realFrameRange = getRealFrameRange(
+	const realFrameRanges = getRealFrameRanges(
 		composition.durationInFrames,
 		frameRange,
 	);
-	const totalFramesToRender = getFramesToRender(
-		realFrameRange,
-		everyNthFrame,
-	).length;
+	const framesToRender = getFramesToRender(realFrameRanges, everyNthFrame);
+	const totalFramesToRender = framesToRender.length;
+	const lastFrameToRender = framesToRender[framesToRender.length - 1];
 
 	Log.verbose(
 		{indent, logLevel, tag: 'renderMedia()'},
-		`Rendering frames ${realFrameRange.join('-')}`,
+		`Rendering frames ${realFrameRanges.map((range) => range.join('-')).join(', ')}`,
 	);
 
 	const callUpdate = () => {
@@ -533,7 +532,7 @@ const internalRenderMediaRaw = ({
 	});
 
 	const {waitForRightTimeOfFrameToBeInserted, setFrameToStitch, waitForFinish} =
-		ensureFramesInOrder(realFrameRange);
+		ensureFramesInOrder(framesToRender);
 
 	const fps = composition.fps / everyNthFrame;
 
@@ -694,6 +693,8 @@ const internalRenderMediaRaw = ({
 					imageFormat,
 					jpegQuality,
 					frameRange,
+					frames: null,
+					outputFramesInSequence: true,
 					puppeteerInstance,
 					everyNthFrame,
 					onFrameBuffer: parallelEncoding
@@ -720,8 +721,9 @@ const internalRenderMediaRaw = ({
 								stitcherFfmpeg?.stdin?.write(buffer);
 								stopPerfMeasure(id);
 
+								const frameIndex = framesToRender.indexOf(frame);
 								setFrameToStitch(
-									Math.min(realFrameRange[1] + 1, frame + everyNthFrame),
+									framesToRender[frameIndex + 1] ?? lastFrameToRender + 1,
 								);
 							}
 						: null,
@@ -856,7 +858,7 @@ const internalRenderMediaRaw = ({
 						event: 'cloud-render',
 						host: null,
 						succeeded: true,
-						licenseKey: licenseKey ?? null,
+						licenseKey: licenseKey === 'free-license' ? null : licenseKey,
 						isProduction: isProduction ?? true,
 						isStill: false,
 					})
@@ -1032,9 +1034,29 @@ export const renderMedia = ({
 	}
 
 	const licenseKey =
-		'licenseKey' in apiKeyOrLicenseKey ? apiKeyOrLicenseKey.licenseKey : null;
+		'licenseKey' in apiKeyOrLicenseKey &&
+		typeof apiKeyOrLicenseKey.licenseKey === 'string'
+			? apiKeyOrLicenseKey.licenseKey
+			: null;
 	const apiKey =
-		'apiKey' in apiKeyOrLicenseKey ? apiKeyOrLicenseKey.apiKey : null;
+		'apiKey' in apiKeyOrLicenseKey &&
+		typeof apiKeyOrLicenseKey.apiKey === 'string'
+			? apiKeyOrLicenseKey.apiKey
+			: null;
+	const effectiveLicenseKey =
+		(NoReactInternals.ENABLE_V5_BREAKING_CHANGES
+			? licenseKey
+			: (licenseKey ?? apiKey)) ?? null;
+
+	if (
+		NoReactInternals.ENABLE_V5_BREAKING_CHANGES &&
+		effectiveLicenseKey === null
+	) {
+		Log.warn(
+			{indent, logLevel},
+			'Pass "licenseKey" to renderMedia(). If you qualify for the Free License (https://remotion.dev/license), pass "free-license" instead.',
+		);
+	}
 
 	return internalRenderMedia({
 		proResProfile: proResProfile ?? undefined,
@@ -1111,7 +1133,7 @@ export const renderMedia = ({
 		hardwareAcceleration: hardwareAcceleration ?? 'disable',
 		chromeMode: chromeMode ?? 'headless-shell',
 		mediaCacheSizeInBytes: mediaCacheSizeInBytes ?? null,
-		licenseKey: licenseKey ?? apiKey ?? null,
+		licenseKey: effectiveLicenseKey,
 		onLog: defaultOnLog,
 		isProduction: isProduction ?? null,
 		sampleRate: sampleRate ?? composition.defaultSampleRate ?? 48000,

@@ -35,8 +35,12 @@ import {parseAst} from '../../codemods/parse-ast';
 import {getCssShorthandForLonghand} from '../../helpers/css-shorthand-properties';
 import {getAstNodePath} from '../../helpers/get-ast-node-path';
 import {toImportAgnosticNodePath} from '../../helpers/import-agnostic-node-path';
+import {parseBorderRadiusShorthand} from '../../helpers/parse-border-radius-shorthand';
 import {parseKeyframeEasingExpression} from '../../helpers/parse-keyframe-easing-expression';
-import {resolveFileInsideProject} from '../../helpers/resolve-file-inside-project';
+import {
+	FileOutsideProjectError,
+	resolveFileInsideProject,
+} from '../../helpers/resolve-file-inside-project';
 import {parseVideoConfigNumericExpression} from '../../helpers/video-config-numeric-expression';
 import {
 	getVideoConfigIdentifierValues,
@@ -58,6 +62,60 @@ type PropClamping = KeyframedPropStatus['clamping'];
 type PropPosterize = KeyframedPropStatus['posterize'];
 type PropOutput = KeyframedPropStatus['output'];
 type PropInterpolationFunction = KeyframedPropStatus['interpolationFunction'];
+
+// A file write synchronously notifies every sequence subscription. Status
+// computation is read-only, so all subscribers can share one parsed snapshot
+// until the notification burst has finished.
+let cachedSequencePropsStatusAst: {
+	fileContents: string;
+	ast: File;
+	videoConfigIdentifierValues: Map<string, VideoConfigIdentifierValues>;
+} | null = null;
+
+// A subsequent save can consume the last read-only snapshot if the file has
+// not changed. The save mutates the AST, so it must only be reused once.
+let reusableSequencePropsStatusAst: {
+	fileContents: string;
+	ast: File;
+} | null = null;
+
+const getCachedSequencePropsStatusAst = (fileContents: string) => {
+	if (cachedSequencePropsStatusAst?.fileContents !== fileContents) {
+		const snapshot = {
+			fileContents,
+			ast: parseAst(fileContents),
+			videoConfigIdentifierValues: new Map<
+				string,
+				VideoConfigIdentifierValues
+			>(),
+		};
+		cachedSequencePropsStatusAst = snapshot;
+		reusableSequencePropsStatusAst = snapshot;
+		queueMicrotask(() => {
+			if (cachedSequencePropsStatusAst === snapshot) {
+				cachedSequencePropsStatusAst = null;
+			}
+		});
+	}
+
+	return cachedSequencePropsStatusAst;
+};
+
+export const takeCachedSequencePropsStatusAst = (
+	fileContents: string,
+): File | null => {
+	if (reusableSequencePropsStatusAst?.fileContents !== fileContents) {
+		return null;
+	}
+
+	const {ast} = reusableSequencePropsStatusAst;
+	reusableSequencePropsStatusAst = null;
+	if (cachedSequencePropsStatusAst?.ast === ast) {
+		cachedSequencePropsStatusAst = null;
+	}
+
+	return ast;
+};
 
 const staticStatus = (
 	codeValue: unknown,
@@ -744,7 +802,7 @@ const getPropsStatus = (
 	return props;
 };
 
-const getNodePathForRecastPath = (
+export const getNodePathForRecastPath = (
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	recastPath: any,
 	ast: File,
@@ -907,32 +965,142 @@ export const findNodePathForJsxElement = (
 	return foundPath;
 };
 
+const RECAST_TAB_WIDTH = 4;
+
+const sourceColumnToRecastColumn = ({
+	sourceLine,
+	column,
+}: {
+	sourceLine: string | undefined;
+	column: number;
+}) => {
+	if (sourceLine === undefined) {
+		return column;
+	}
+
+	let recastColumn = 0;
+	for (let index = 0; index < column; index++) {
+		if (sourceLine[index] === '\t') {
+			recastColumn += RECAST_TAB_WIDTH - (recastColumn % RECAST_TAB_WIDTH);
+		} else {
+			recastColumn++;
+		}
+	}
+
+	return recastColumn;
+};
+
 export const lineColumnToNodePath = (
 	ast: File,
 	targetLine: number,
+	targetColumn?: number,
+	fileContents?: string,
 ): SequenceNodePath | null => {
-	let foundPath: SequenceNodePath | null = null;
+	const lineMatches: SequenceNodePath[] = [];
+	const exactMatches: SequenceNodePath[] = [];
+	const recastTargetColumn =
+		targetColumn === undefined || fileContents === undefined
+			? targetColumn
+			: sourceColumnToRecastColumn({
+					sourceLine: fileContents.split('\n')[targetLine - 1],
+					column: targetColumn,
+				});
 
 	recast.types.visit(ast, {
 		visitJSXOpeningElement(p) {
 			const {node} = p;
 			if (node.loc && node.loc.start.line === targetLine) {
-				foundPath = getNodePathForRecastPath(p, ast);
-				return false;
+				const nodePath = getNodePathForRecastPath(p, ast);
+				lineMatches.push(nodePath);
+				if (node.loc.start.column === recastTargetColumn) {
+					exactMatches.push(nodePath);
+				}
 			}
 
 			return this.traverse(p);
 		},
 	});
 
-	return foundPath;
+	if (exactMatches.length === 1) {
+		return exactMatches[0];
+	}
+
+	return lineMatches.at(-1) ?? null;
+};
+
+export const lineColumnsToNodePaths = ({
+	ast,
+	targets,
+	fileContents,
+}: {
+	ast: File;
+	targets: {line: number; column: number}[];
+	fileContents: string;
+}): (SequenceNodePath | null)[] => {
+	const sourceLines = fileContents.split('\n');
+	const targetIndicesByLine = new Map<number, number[]>();
+	const recastTargetColumns = targets.map(({line, column}, index) => {
+		const indices = targetIndicesByLine.get(line) ?? [];
+		indices.push(index);
+		targetIndicesByLine.set(line, indices);
+		return sourceColumnToRecastColumn({
+			sourceLine: sourceLines[line - 1],
+			column,
+		});
+	});
+	const lineMatches: (SequenceNodePath | null)[] = targets.map(() => null);
+	const exactMatches: (SequenceNodePath | null)[] = targets.map(() => null);
+	const exactMatchCounts = targets.map(() => 0);
+
+	recast.types.visit(ast, {
+		visitJSXOpeningElement(p) {
+			const {node} = p;
+			const line = node.loc?.start.line;
+			const targetIndices = line ? targetIndicesByLine.get(line) : undefined;
+			if (targetIndices) {
+				const nodePath = getNodePathForRecastPath(p, ast);
+				for (const index of targetIndices) {
+					lineMatches[index] = nodePath;
+					if (node.loc?.start.column === recastTargetColumns[index]) {
+						exactMatches[index] = nodePath;
+						exactMatchCounts[index]++;
+					}
+				}
+			}
+
+			return this.traverse(p);
+		},
+	});
+
+	return targets.map((_, index) =>
+		exactMatchCounts[index] === 1 ? exactMatches[index] : lineMatches[index],
+	);
+};
+
+export const resolveSequencePropsNodePathsFromFilename = ({
+	fileName,
+	targets,
+	remotionRoot,
+}: {
+	fileName: string;
+	targets: {line: number; column: number}[];
+	remotionRoot: string;
+}) => {
+	const {absolutePath} = resolveFileInsideProject({
+		remotionRoot,
+		fileName,
+		action: 'read',
+	});
+	const fileContents = readFileSync(absolutePath, 'utf-8');
+	const {ast} = getCachedSequencePropsStatusAst(fileContents);
+	return lineColumnsToNodePaths({ast, targets, fileContents});
 };
 
 const PIXEL_VALUE_REGEX = /^-?\d+(\.\d+)?px$/;
 
 const isSupportedTranslateValue = (value: string): boolean => {
 	const parts = value.split(/\s+/);
-	if (parts.length === 1 || parts.length === 2) {
+	if (parts.length >= 1 && parts.length <= 3) {
 		return parts.every((part) => PIXEL_VALUE_REGEX.test(part));
 	}
 
@@ -957,6 +1125,102 @@ const getObjectPropertyName = (property: ObjectProperty): string | null => {
 	}
 
 	return null;
+};
+
+const BORDER_RADIUS_SHORTHAND = 'borderRadius';
+const BORDER_RADIUS_LONGHANDS = [
+	'borderTopLeftRadius',
+	'borderTopRightRadius',
+	'borderBottomRightRadius',
+	'borderBottomLeftRadius',
+] as const;
+const BORDER_RADIUS_PROPERTIES = new Set<string>([
+	BORDER_RADIUS_SHORTHAND,
+	...BORDER_RADIUS_LONGHANDS,
+]);
+
+const hasMixedBorderRadiusRepresentation = (
+	jsxElement: JSXOpeningElement,
+): boolean => {
+	const style = jsxElement.attributes.find(
+		(attribute) =>
+			attribute.type === 'JSXAttribute' &&
+			attribute.name.type !== 'JSXNamespacedName' &&
+			attribute.name.name === 'style',
+	);
+	if (
+		!style ||
+		style.type !== 'JSXAttribute' ||
+		style.value?.type !== 'JSXExpressionContainer' ||
+		style.value.expression.type !== 'ObjectExpression'
+	) {
+		return false;
+	}
+
+	let hasShorthand = false;
+	let hasLonghand = false;
+	for (const property of style.value.expression.properties) {
+		if (property.type !== 'ObjectProperty') {
+			continue;
+		}
+
+		const name = getObjectPropertyName(property);
+		hasShorthand ||= name === BORDER_RADIUS_SHORTHAND;
+		hasLonghand ||= BORDER_RADIUS_LONGHANDS.some(
+			(longhand) => longhand === name,
+		);
+	}
+
+	return hasShorthand && hasLonghand;
+};
+
+const getUniformBorderRadius = (value: unknown): number | null => {
+	const parsed = parseBorderRadiusShorthand(value);
+	if (!parsed) {
+		return null;
+	}
+
+	const values = Object.values(parsed);
+	return values.every((radius) => radius === values[0]) ? values[0] : null;
+};
+
+const getBorderRadiusShorthandStatus = ({
+	propValue,
+	ast,
+	videoConfigValues,
+}: {
+	propValue: Expression;
+	ast: File;
+	videoConfigValues: VideoConfigIdentifierValues;
+}): CanUpdatePropStatus => {
+	if (isStaticValue(propValue)) {
+		const uniform = getUniformBorderRadius(extractStaticValue(propValue));
+		return uniform === null ? computedStatus() : staticStatus(uniform, null);
+	}
+
+	const numericExpression = parseVideoConfigNumericExpression({
+		node: propValue,
+		videoConfigValues,
+	});
+	if (numericExpression !== null && numericExpression.value >= 0) {
+		return staticStatus(numericExpression.value, numericExpression);
+	}
+
+	const computed = getComputedStatus(propValue, ast, videoConfigValues);
+	if (
+		computed.status === 'keyframed' &&
+		computed.interpolationFunction === 'interpolate' &&
+		computed.keyframes.every(
+			(keyframe) =>
+				typeof keyframe.value === 'number' &&
+				Number.isFinite(keyframe.value) &&
+				keyframe.value >= 0,
+		)
+	) {
+		return computed;
+	}
+
+	return computedStatus();
 };
 
 const getNestedPropStatus = ({
@@ -1051,10 +1315,6 @@ const getNestedPropStatus = ({
 		const staticShorthandValue = extractStaticValue(shorthandValue, {
 			allowSpecialValues: false,
 		});
-		if (typeof staticShorthandValue !== 'string') {
-			return computedStatus();
-		}
-
 		const parsed = cssShorthand.parse(staticShorthandValue);
 		return parsed ? staticStatus(parsed[childKey], null) : computedStatus();
 	}
@@ -1065,6 +1325,14 @@ const getNestedPropStatus = ({
 	}
 
 	const propValue = prop.value as Expression;
+	if (parentKey === 'style' && childKey === BORDER_RADIUS_SHORTHAND) {
+		return getBorderRadiusShorthandStatus({
+			propValue,
+			ast,
+			videoConfigValues,
+		});
+	}
+
 	const staticValueOptions = {allowSpecialValues};
 	if (!isStaticValue(propValue, staticValueOptions)) {
 		const numericExpression = parseVideoConfigNumericExpression({
@@ -1128,7 +1396,17 @@ const computeSequenceOnlyPropsRecord = ({
 		assetKeys,
 	);
 	const filteredProps: Record<string, CanUpdatePropStatus> = {};
+	const mixedBorderRadius = hasMixedBorderRadiusRepresentation(jsxElement);
 	for (const key of keys) {
+		if (
+			mixedBorderRadius &&
+			key.startsWith('style.') &&
+			BORDER_RADIUS_PROPERTIES.has(key.slice('style.'.length))
+		) {
+			filteredProps[key] = computedStatus();
+			continue;
+		}
+
 		if (key === 'children') {
 			const staticChildrenAttribute = getStaticJsxChildrenAttribute(jsxElement);
 			if (staticChildrenAttribute) {
@@ -1168,29 +1446,23 @@ const computeSequenceOnlyPropsRecord = ({
 	return filteredProps;
 };
 
-export const computeSequencePropsStatusFromContent = ({
-	fileContents,
+const computeSequencePropsStatusFromAstAndIdentifiers = ({
+	ast,
 	nodePath,
 	componentIdentity,
 	keys,
-	assetKeys = [],
+	assetKeys,
 	effects,
-	videoConfigValues,
+	videoConfigIdentifierValues,
 }: {
-	fileContents: string;
+	ast: File;
 	nodePath: SequenceNodePath;
 	componentIdentity: JsxComponentIdentity | null;
 	keys: string[];
-	assetKeys?: string[];
+	assetKeys: string[];
 	effects: string[][];
-	videoConfigValues: VideoConfigValues | null;
+	videoConfigIdentifierValues: VideoConfigIdentifierValues;
 }): CanUpdateSequencePropsResponseTrue => {
-	const ast = parseAst(fileContents);
-	const videoConfigIdentifierValues = getVideoConfigIdentifierValues({
-		ast,
-		videoConfigValues,
-	});
-
 	const jsxElementNode = findJsxElementNodeAtNodePath(ast, nodePath);
 	const jsxElement = jsxElementNode?.openingElement ?? null;
 
@@ -1227,6 +1499,81 @@ export const computeSequencePropsStatusFromContent = ({
 		props: filteredProps,
 		effects: effectsStatuses,
 	};
+};
+
+export const computeSequencePropsStatusFromAst = ({
+	ast,
+	nodePath,
+	componentIdentity,
+	keys,
+	assetKeys = [],
+	effects,
+	videoConfigValues,
+}: {
+	ast: File;
+	nodePath: SequenceNodePath;
+	componentIdentity: JsxComponentIdentity | null;
+	keys: string[];
+	assetKeys?: string[];
+	effects: string[][];
+	videoConfigValues: VideoConfigValues | null;
+}): CanUpdateSequencePropsResponseTrue => {
+	return computeSequencePropsStatusFromAstAndIdentifiers({
+		ast,
+		nodePath,
+		componentIdentity,
+		keys,
+		assetKeys,
+		effects,
+		videoConfigIdentifierValues: getVideoConfigIdentifierValues({
+			ast,
+			videoConfigValues,
+		}),
+	});
+};
+
+export const computeSequencePropsStatusFromContent = ({
+	fileContents,
+	nodePath,
+	componentIdentity,
+	keys,
+	assetKeys = [],
+	effects,
+	videoConfigValues,
+}: {
+	fileContents: string;
+	nodePath: SequenceNodePath;
+	componentIdentity: JsxComponentIdentity | null;
+	keys: string[];
+	assetKeys?: string[];
+	effects: string[][];
+	videoConfigValues: VideoConfigValues | null;
+}): CanUpdateSequencePropsResponseTrue => {
+	const cachedAst = getCachedSequencePropsStatusAst(fileContents);
+	const {ast} = cachedAst;
+	const videoConfigCacheKey = JSON.stringify(videoConfigValues);
+	let videoConfigIdentifierValues =
+		cachedAst.videoConfigIdentifierValues.get(videoConfigCacheKey);
+	if (videoConfigIdentifierValues === undefined) {
+		videoConfigIdentifierValues = getVideoConfigIdentifierValues({
+			ast,
+			videoConfigValues,
+		});
+		cachedAst.videoConfigIdentifierValues.set(
+			videoConfigCacheKey,
+			videoConfigIdentifierValues,
+		);
+	}
+
+	return computeSequencePropsStatusFromAstAndIdentifiers({
+		ast,
+		nodePath,
+		componentIdentity,
+		keys,
+		assetKeys,
+		effects,
+		videoConfigIdentifierValues,
+	});
 };
 
 export const computeSequencePropsStatus = ({
@@ -1266,9 +1613,10 @@ export const computeSequencePropsStatus = ({
 	});
 };
 
-export const computeSequencePropsStatusFromFilenameByLine = ({
+export const computeSequencePropsStatusFromFilenameByLocation = ({
 	fileName,
 	line,
+	column,
 	componentIdentity,
 	keys,
 	assetKeys = [],
@@ -1279,6 +1627,7 @@ export const computeSequencePropsStatusFromFilenameByLine = ({
 }: {
 	fileName: string;
 	line: number;
+	column: number;
 	componentIdentity: JsxComponentIdentity | null;
 	keys: string[];
 	assetKeys?: string[];
@@ -1295,9 +1644,14 @@ export const computeSequencePropsStatusFromFilenameByLine = ({
 		});
 
 		const fileContents = readFileSync(absolutePath, 'utf-8');
-		const ast = parseAst(fileContents);
+		const {ast} = getCachedSequencePropsStatusAst(fileContents);
 
-		const resolvedNodePath = lineColumnToNodePath(ast, line);
+		const resolvedNodePath = lineColumnToNodePath(
+			ast,
+			line,
+			column,
+			fileContents,
+		);
 		if (!resolvedNodePath) {
 			return {
 				status: {
@@ -1329,6 +1683,20 @@ export const computeSequencePropsStatusFromFilenameByLine = ({
 			success: true,
 		};
 	} catch (err) {
+		if (
+			err instanceof FileOutsideProjectError ||
+			err instanceof JsxElementIdentityMismatchError ||
+			err instanceof JsxElementNotFoundAtLocationError
+		) {
+			return {
+				status: {
+					canUpdate: false as const,
+					reason: 'not-found',
+				},
+				success: false,
+			};
+		}
+
 		RenderInternals.Log.error({indent: false, logLevel}, err);
 		return {
 			status: {

@@ -6,10 +6,15 @@ import type {
 	VideoConfigValues,
 } from 'remotion';
 import {Internals} from 'remotion';
-import {callApi} from '../call-api';
+import {
+	subscribeToSequenceProps,
+	unsubscribeFromSequenceProps,
+} from '../sequence-props-api';
 
 type Key = string;
 
+// The generated stack distinguishes Fast Refresh instances even when source maps
+// resolve both the old and new JSX nodes to the same line and column.
 const makeKey = ({
 	fileName,
 	line,
@@ -19,6 +24,7 @@ const makeKey = ({
 	assetKeys,
 	effectKeys,
 	videoConfigValues,
+	stack,
 }: {
 	fileName: string;
 	line: number;
@@ -28,12 +34,11 @@ const makeKey = ({
 	assetKeys: string[];
 	effectKeys: string[][];
 	videoConfigValues: VideoConfigValues;
+	stack: string | null;
 }): Key =>
-	`${fileName}\0${line}\0${column}\0${componentIdentity ?? ''}\0${sequenceKeys.join('\0')}\0${assetKeys.join('\0')}\0${effectKeys.map((keys) => keys.join('\0')).join('\0\0')}\0${JSON.stringify(videoConfigValues)}`;
+	`${fileName}\0${line}\0${column}\0${componentIdentity ?? ''}\0${sequenceKeys.join('\0')}\0${assetKeys.join('\0')}\0${effectKeys.map((keys) => keys.join('\0')).join('\0\0')}\0${JSON.stringify(videoConfigValues)}\0${stack ?? ''}`;
 
-type SubscribeResult = Awaited<
-	ReturnType<typeof callApi<'/api/subscribe-to-sequence-props'>>
->;
+type SubscribeResult = Awaited<ReturnType<typeof subscribeToSequenceProps>>;
 
 type ApplyResult = (result: SubscribeResult) => void;
 
@@ -59,6 +64,7 @@ export const acquireSequencePropsSubscription = ({
 	applyOnce,
 	applyEach,
 	videoConfigValues,
+	stack,
 }: {
 	fileName: string;
 	line: number;
@@ -71,6 +77,7 @@ export const acquireSequencePropsSubscription = ({
 	applyOnce: ApplyResult;
 	applyEach: ApplyResult;
 	videoConfigValues: VideoConfigValues;
+	stack: string | null;
 }): {release: () => void} => {
 	const sequenceKeys = getAllSchemaKeys(schema);
 	const assetKeys = getAssetSchemaKeys(schema);
@@ -84,11 +91,12 @@ export const acquireSequencePropsSubscription = ({
 		assetKeys,
 		effectKeys,
 		videoConfigValues,
+		stack,
 	});
 	let entry = entries.get(key);
 
 	if (!entry) {
-		const promise = callApi('/api/subscribe-to-sequence-props', {
+		const promise = subscribeToSequenceProps({
 			fileName,
 			line,
 			column,
@@ -163,7 +171,7 @@ export const acquireSequencePropsSubscription = ({
 						return;
 					}
 
-					return callApi('/api/unsubscribe-from-sequence-props', {
+					return unsubscribeFromSequenceProps({
 						fileName: acquired.fileName,
 						nodePath: result.nodePath,
 						clientId: acquired.clientId,

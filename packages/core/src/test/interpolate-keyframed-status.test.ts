@@ -22,6 +22,66 @@ test('interpolates linear numeric keyframes', () => {
 	expect(result).toBe(50);
 });
 
+test('holds the previous keyframe value until the segment ends', () => {
+	const status: CanUpdateSequencePropStatusKeyframed = {
+		status: 'keyframed',
+		interpolationFunction: 'interpolate',
+		keyframes: [
+			{frame: 0, value: 0},
+			{frame: 60, value: 100},
+		],
+		easing: [{type: 'step1'}],
+		clamping: {left: 'extend', right: 'extend'},
+		posterize: undefined,
+		output: undefined,
+	};
+
+	expect(
+		interpolateKeyframedStatus({
+			forceSpringAllowTail: null,
+			frame: 59,
+			status,
+		}),
+	).toBe(0);
+	expect(
+		interpolateKeyframedStatus({
+			forceSpringAllowTail: null,
+			frame: 60,
+			status,
+		}),
+	).toBe(100);
+});
+
+test('holds non-numeric string keyframes until the segment ends', () => {
+	const status: CanUpdateSequencePropStatusKeyframed = {
+		status: 'keyframed',
+		interpolationFunction: 'interpolate',
+		keyframes: [
+			{frame: 0, value: 'default'},
+			{frame: 60, value: 'ne-resize'},
+		],
+		easing: [{type: 'step1'}],
+		clamping: {left: 'clamp', right: 'clamp'},
+		posterize: undefined,
+		output: undefined,
+	};
+
+	expect(
+		interpolateKeyframedStatus({
+			forceSpringAllowTail: null,
+			frame: 59,
+			status,
+		}),
+	).toBe('default');
+	expect(
+		interpolateKeyframedStatus({
+			forceSpringAllowTail: null,
+			frame: 60,
+			status,
+		}),
+	).toBe('ne-resize');
+});
+
 test('interpolates numeric keyframes with perceptual-scale output', () => {
 	const result = interpolateKeyframedStatus({
 		forceSpringAllowTail: null,
@@ -343,4 +403,24 @@ test('interpolates scale strings component-wise', () => {
 		},
 	});
 	expect(result).toBe('3 5 2');
+});
+
+test('interpolates 3D rotation keyframes as one property', () => {
+	const result = interpolateKeyframedStatus({
+		forceSpringAllowTail: null,
+		frame: 30,
+		status: {
+			status: 'keyframed',
+			interpolationFunction: 'interpolate',
+			keyframes: [
+				{frame: 0, value: '0deg'},
+				{frame: 60, value: '1 0 0 90deg'},
+			],
+			easing: [{type: 'linear'}],
+			clamping: {left: 'extend', right: 'extend'},
+			posterize: undefined,
+			output: undefined,
+		},
+	});
+	expect(result).toBe('0.5 0 0.5 45deg');
 });

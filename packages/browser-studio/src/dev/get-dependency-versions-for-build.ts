@@ -25,7 +25,12 @@ const getWorkspacePackageVersions = () => {
 	for (const packageJsonPath of packageJsonGlob.scanSync({cwd: repoDir})) {
 		const packageJson = readPackageJson(join(repoDir, packageJsonPath));
 
-		if (!packageJson.name || !packageJson.version) {
+		if (
+			!packageJson.name ||
+			!packageJson.version ||
+			(packageJson.name !== 'remotion' &&
+				!packageJson.name.startsWith('@remotion/'))
+		) {
 			continue;
 		}
 
@@ -77,6 +82,9 @@ export const getBrowserStudioDependencyVersionsForBuild = (): Record<
 	const studioPackageJson = readPackageJson(
 		join(repoDir, 'packages', 'studio', 'package.json'),
 	);
+	const browserStudioPackageJson = readPackageJson(
+		join(repoDir, 'packages', 'browser-studio', 'package.json'),
+	);
 	const catalog = rootPackageJson.workspaces?.catalog;
 
 	if (!catalog) {
@@ -91,6 +99,8 @@ export const getBrowserStudioDependencyVersionsForBuild = (): Record<
 		[studioPackageJson.name]: studioPackageJson.version,
 		react: 'catalog:',
 		'react-dom': 'catalog:',
+		'react-refresh':
+			browserStudioPackageJson.dependencies?.['react-refresh'] ?? '0.18.0',
 	};
 
 	for (const [name, spec] of Object.entries(
@@ -104,6 +114,7 @@ export const getBrowserStudioDependencyVersionsForBuild = (): Record<
 	}
 
 	const workspacePackageVersions = getWorkspacePackageVersions();
+	Object.assign(dependencySpecs, workspacePackageVersions);
 
 	return Object.fromEntries(
 		Object.entries(dependencySpecs)

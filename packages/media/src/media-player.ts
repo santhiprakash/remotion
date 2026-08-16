@@ -171,6 +171,7 @@ export class MediaPlayer {
 			src: this.src,
 			credentials,
 			requestInit,
+			logLevel,
 		});
 		this.input = input;
 		this.inputCacheKey = cacheKey;
@@ -181,7 +182,6 @@ export class MediaPlayer {
 		if (canvas) {
 			const context = canvas.getContext('2d', {
 				alpha: true,
-				desynchronized: true,
 			}) as OffscreenCanvasRenderingContext2D | CanvasRenderingContext2D | null;
 
 			if (!context) {
@@ -391,15 +391,8 @@ export class MediaPlayer {
 					getStartTime: () => this.getStartTime(),
 					initialMuted,
 					drawDebugOverlay: this.drawDebugOverlay,
-					initialPlaybackRate: this.playbackRate * this.globalPlaybackRate,
 					getSequenceDurationInSeconds: () =>
 						this.getSequenceDurationInSeconds(),
-					initialTrimBefore: this.trimBefore,
-					initialTrimAfter: this.trimAfter,
-					initialSequenceOffset: this.sequenceOffset,
-					initialSequenceDurationInFrames: this.sequenceDurationInFrames,
-					initialLoop: this.loop,
-					initialFps: this.fps,
 				});
 			}
 
@@ -500,6 +493,9 @@ export class MediaPlayer {
 				this.videoIteratorManager?.seek({
 					newTime,
 					nonce,
+					fps: this.fps,
+					playbackRate: this.playbackRate,
+					isPlaying: this.playing,
 				}),
 				this.audioIteratorManager?.seek({
 					newTime,

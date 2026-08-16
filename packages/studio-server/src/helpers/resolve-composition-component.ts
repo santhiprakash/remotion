@@ -7,26 +7,37 @@ import type {
 	ExportSpecifier,
 	File,
 	FunctionDeclaration,
-	ImportDefaultSpecifier,
 	ImportDeclaration,
+	ImportDefaultSpecifier,
 	ImportSpecifier,
 	JSXAttribute,
 	JSXElement,
+	JSXOpeningElement,
 	JSXSpreadAttribute,
 	ObjectProperty,
 	VariableDeclaration,
 } from '@babel/types';
+import type {ComponentProp} from '@remotion/studio-protocol';
 import {
 	isUrl,
-	type ComponentProp,
 	type InsertableCompositionElement,
 	type InsertableCompositionElementPosition,
+	type SequenceNodePathRemapping,
 } from '@remotion/studio-shared';
 import type {namedTypes} from 'ast-types';
 import * as recast from 'recast';
+import type {SequenceNodePath} from 'remotion';
 import {NoReactInternals} from 'remotion/no-react';
 import {formatFileContent} from '../codemods/format-file-content';
-import {parseAst, serializeAst} from '../codemods/parse-ast';
+import {
+	captureJsxNodePaths,
+	getNodePathRemappings,
+} from '../codemods/get-node-path-remappings';
+import {
+	parseAst,
+	parseAstForReadOnly,
+	serializeAst,
+} from '../codemods/parse-ast';
 import {stripParenthesizedExtra} from '../codemods/strip-parenthesized-extra';
 import {parseValueExpression} from '../codemods/update-nested-prop';
 import {
@@ -360,9 +371,6 @@ const findReExportTargets = ({
 	recast.types.visit(ast, {
 		visitExportNamedDeclaration(astPath) {
 			const node = astPath.node as ExportNamedDeclaration;
-			if (typeof node.source?.value !== 'string') {
-				return false;
-			}
 
 			for (const specifier of node.specifiers) {
 				if (specifier.type !== 'ExportSpecifier') {
@@ -376,6 +384,20 @@ const findReExportTargets = ({
 
 				const localName = getSpecifierLocalName(specifier);
 				if (!localName) {
+					continue;
+				}
+
+				// Support barrel files that import a component and export it in a
+				// separate declaration. See https://github.com/remotion-dev/remotion/issues/9172.
+				if (typeof node.source?.value !== 'string') {
+					const importTarget = findImportTarget({
+						ast,
+						componentName: localName,
+					});
+					if (importTarget) {
+						targets.push(importTarget);
+					}
+
 					continue;
 				}
 
@@ -456,6 +478,9 @@ const findLocalSymbolLocation = ({
 }): SourceLocation | null => {
 	let location: SourceLocation | null = null;
 
+	// Recast can omit the declaration location for exported functions and
+	// classes, including components resolved through barrel files. The identifier
+	// keeps its location. See https://github.com/remotion-dev/remotion/issues/9172.
 	recast.types.visit(ast, {
 		visitVariableDeclarator(astPath) {
 			if (location) {
@@ -464,7 +489,7 @@ const findLocalSymbolLocation = ({
 
 			const {node} = astPath;
 			if (node.id.type === 'Identifier' && node.id.name === name) {
-				location = locationFromNode(node);
+				location = locationFromNode(node.id);
 				return false;
 			}
 
@@ -478,7 +503,7 @@ const findLocalSymbolLocation = ({
 
 			const {node} = astPath;
 			if (node.id?.name === name) {
-				location = locationFromNode(node);
+				location = locationFromNode(node.id);
 				return false;
 			}
 
@@ -492,7 +517,7 @@ const findLocalSymbolLocation = ({
 
 			const {node} = astPath;
 			if (node.id?.name === name) {
-				location = locationFromNode(node);
+				location = locationFromNode(node.id);
 				return false;
 			}
 
@@ -930,11 +955,13 @@ const createSolidElement = ({
 
 const createComponentElement = ({
 	addPositionStyle,
+	from,
 	localName,
 	props,
 	position,
 }: {
 	addPositionStyle: boolean;
+	from: number | null;
 	localName: string;
 	props: ComponentProp[];
 	position: InsertableCompositionElementPosition | null;
@@ -944,6 +971,7 @@ const createComponentElement = ({
 			recast.types.builders.jsxIdentifier(localName),
 			[
 				...props.map(createComponentProp),
+				...(from === null ? [] : [createNumberAttribute('from', from)]),
 				...(addPositionStyle
 					? [createPositionAbsoluteStyleAttribute(position)]
 					: []),
@@ -959,6 +987,7 @@ const createSequenceWrappedElement = ({
 	child,
 	dimensions,
 	durationInFrames,
+	from,
 	name,
 	position,
 	sequenceLocalName,
@@ -966,6 +995,7 @@ const createSequenceWrappedElement = ({
 	child: namedTypes.JSXElement;
 	dimensions: {width: number; height: number} | null;
 	durationInFrames: number | null;
+	from: number | null;
 	name: string | null;
 	position: InsertableCompositionElementPosition | null;
 	sequenceLocalName: string;
@@ -974,6 +1004,7 @@ const createSequenceWrappedElement = ({
 		recast.types.builders.jsxOpeningElement(
 			recast.types.builders.jsxIdentifier(sequenceLocalName),
 			[
+				...(from === null ? [] : [createNumberAttribute('from', from)]),
 				...(name === null ? [] : [createStringAttribute('name', name)]),
 				...(dimensions !== null
 					? [
@@ -998,6 +1029,7 @@ const createSequenceWrappedElement = ({
 const createAssetElement = ({
 	addPositionStyle,
 	durationInFrames,
+	from,
 	localName,
 	staticFileLocalName,
 	src,
@@ -1006,6 +1038,7 @@ const createAssetElement = ({
 }: {
 	addPositionStyle: boolean;
 	durationInFrames: number | null;
+	from: number | null;
 	localName: string;
 	staticFileLocalName: string | null;
 	src: string;
@@ -1022,6 +1055,7 @@ const createAssetElement = ({
 				...(durationInFrames === null
 					? []
 					: [createNumberAttribute('durationInFrames', durationInFrames)]),
+				...(from === null ? [] : [createNumberAttribute('from', from)]),
 				...(addPositionStyle
 					? [createAssetStyleAttribute({dimensions, position})]
 					: []),
@@ -1034,10 +1068,12 @@ const createAssetElement = ({
 };
 
 const createSvgElement = async ({
+	from,
 	interactiveLocalName,
 	markup,
 	position,
 }: {
+	from: number | null;
 	interactiveLocalName: string;
 	markup: string;
 	position: InsertableCompositionElementPosition | null;
@@ -1045,6 +1081,10 @@ const createSvgElement = async ({
 	const svgElement = await svgMarkupToJsx(markup);
 	const attributes = svgElement.openingElement.attributes ?? [];
 	svgElement.openingElement.attributes = attributes;
+	if (from !== null) {
+		attributes.push(createNumberAttribute('from', from));
+	}
+
 	const styleAttribute = attributes.find(
 		(attribute) =>
 			attribute.type === 'JSXAttribute' &&
@@ -1836,17 +1876,17 @@ const addElementToComponentRoot = ({
 		);
 	}
 
-	if (rootNode.type === 'JSXElement' && rootNode.openingElement.selfClosing) {
+	if (rootNode.type === 'JSXElement') {
+		const existingRoot = rootNode.openingElement.selfClosing
+			? createSequenceWithChild({
+					child: stripParenthesizedExtra(rootNode),
+					sequenceLocalName: ensureSequenceImport(ast),
+				})
+			: stripParenthesizedExtra(rootNode);
 		const fragment = recast.types.builders.jsxFragment(
 			recast.types.builders.jsxOpeningFragment(),
 			recast.types.builders.jsxClosingFragment(),
-			[
-				createSequenceWithChild({
-					child: stripParenthesizedExtra(rootNode),
-					sequenceLocalName: ensureSequenceImport(ast),
-				}),
-				element,
-			],
+			[existingRoot, element],
 		);
 		let replaced = false;
 		recast.types.visit(ast, {
@@ -1944,20 +1984,21 @@ const getComponentLocationInFile = async ({
 	remotionRoot,
 	fileName,
 	exportName,
+	ast: providedAst,
 }: {
 	remotionRoot: string;
 	fileName: string;
 	exportName: string | 'default';
+	ast?: File;
 }): Promise<ResolvedCompositionComponentWithFile> => {
-	const input = await readSourceFile({remotionRoot, fileName});
-	const ast = parseAst(input);
-	const astForSequenceSimulation = parseAst(input);
+	const ast =
+		providedAst ?? parseAst(await readSourceFile({remotionRoot, fileName}));
 	const location =
 		exportName === 'default'
 			? findDefaultExportLocation(ast)
 			: findLocalSymbolLocation({ast, name: exportName});
 	const canAddSequence = canAddSequenceToComponent({
-		ast: astForSequenceSimulation,
+		ast,
 		exportName,
 	});
 
@@ -2002,6 +2043,7 @@ const getComponentLocationRecursively = async ({
 				remotionRoot,
 				fileName,
 				exportName,
+				ast,
 			});
 		}
 
@@ -2037,6 +2079,7 @@ const getComponentLocationRecursively = async ({
 			remotionRoot,
 			fileName,
 			exportName,
+			ast,
 		});
 	} finally {
 		visited.delete(key);
@@ -2057,7 +2100,7 @@ export const resolveCompositionComponentWithFile = async ({
 		remotionRoot,
 		fileName: compositionFileName,
 	});
-	const ast = parseAst(input);
+	const ast = parseAstForReadOnly(input);
 	const compositionElement = findCompositionElement({ast, compositionId});
 	if (!compositionElement) {
 		throw new Error(`Could not find composition "${compositionId}"`);
@@ -2135,12 +2178,14 @@ const createInsertableJsxElement = ({
 	ast,
 	destinationFileName,
 	element,
+	from,
 	remotionRoot,
 }: {
 	addPositionStyleToComponent: boolean;
 	ast: File;
 	destinationFileName: string;
 	element: InsertableCompositionElement;
+	from: number | null;
 	remotionRoot: string;
 }): Promise<namedTypes.JSXElement> | namedTypes.JSXElement => {
 	if (element.type === 'solid') {
@@ -2164,6 +2209,7 @@ const createInsertableJsxElement = ({
 
 		return createComponentElement({
 			addPositionStyle: addPositionStyleToComponent,
+			from,
 			localName: componentLocalName,
 			props: element.props,
 			position: element.position,
@@ -2172,6 +2218,7 @@ const createInsertableJsxElement = ({
 
 	if (element.type === 'svg') {
 		return createSvgElement({
+			from,
 			interactiveLocalName: ensureInteractiveImport(ast),
 			markup: element.markup,
 			position: element.position,
@@ -2226,10 +2273,14 @@ const createInsertableJsxElement = ({
 				addPositionStyleToComponent && element.assetType !== 'audio',
 			durationInFrames:
 				element.assetType === 'image' ? null : element.durationInFrames,
+			from,
 			localName,
 			staticFileLocalName,
 			src: element.src,
-			dimensions: element.dimensions,
+			dimensions:
+				element.assetType === 'image' && from !== null
+					? null
+					: element.dimensions,
 			position: element.position,
 		});
 	}
@@ -2242,6 +2293,7 @@ export const insertJsxElementIntoComposition = async ({
 	compositionFile,
 	compositionId,
 	element,
+	from,
 	prettierConfigOverride,
 	wrapInSequence = null,
 }: {
@@ -2249,10 +2301,12 @@ export const insertJsxElementIntoComposition = async ({
 	compositionFile: string;
 	compositionId: string;
 	element: InsertableCompositionElement;
+	from: number | null;
 	prettierConfigOverride: Record<string, unknown> | null;
 	wrapInSequence?: {
 		dimensions: {width: number; height: number} | null;
 		durationInFrames?: number | null;
+		from: number | null;
 		name: string | null;
 		position: InsertableCompositionElementPosition | null;
 	} | null;
@@ -2263,6 +2317,8 @@ export const insertJsxElementIntoComposition = async ({
 	output: string;
 	formatted: boolean;
 	logLine: number;
+	nodePathRemappings: SequenceNodePathRemapping[];
+	insertedNodePath: SequenceNodePath | null;
 }> => {
 	const location = await resolveCompositionComponentWithFile({
 		remotionRoot,
@@ -2280,6 +2336,7 @@ export const insertJsxElementIntoComposition = async ({
 		fileName: location.fileName,
 	});
 	const ast = parseAst(input);
+	const capturedNodePaths = captureJsxNodePaths(ast);
 	if (
 		element.type === 'composition' &&
 		element.compositionId === compositionId
@@ -2294,13 +2351,26 @@ export const insertJsxElementIntoComposition = async ({
 					durationInFrames: element.durationInFrames,
 					name: element.compositionId,
 					position: element.position,
+					from,
 				}
-			: wrapInSequence;
+			: from === null ||
+				  element.type === 'asset' ||
+				  element.type === 'svg' ||
+				  element.type === 'component'
+				? wrapInSequence
+				: {
+						dimensions: null,
+						durationInFrames: null,
+						name: null,
+						position: element.position,
+						from,
+					};
 	const elementToInsert = await createInsertableJsxElement({
 		addPositionStyleToComponent: sequenceWrapper === null,
 		ast,
 		destinationFileName: location.fileName,
 		element,
+		from,
 		remotionRoot,
 	});
 	const finalElementToInsert = sequenceWrapper
@@ -2308,6 +2378,7 @@ export const insertJsxElementIntoComposition = async ({
 				child: elementToInsert,
 				dimensions: sequenceWrapper.dimensions,
 				durationInFrames: sequenceWrapper.durationInFrames ?? null,
+				from: sequenceWrapper.from,
 				name: sequenceWrapper.name,
 				position: sequenceWrapper.position,
 				sequenceLocalName: ensureSequenceImport(ast),
@@ -2318,12 +2389,21 @@ export const insertJsxElementIntoComposition = async ({
 		exportName: location.exportName,
 		element: finalElementToInsert,
 	});
-
 	const finalFile = serializeAst(ast);
+
 	const {output, formatted} = await formatFileContent({
 		input: finalFile,
 		prettierConfigOverride,
 	});
+	const {finalNodePathByNode, nodePathRemappings} = getNodePathRemappings({
+		ast,
+		captured: capturedNodePaths,
+		output,
+	});
+	const insertedNodePath =
+		finalNodePathByNode.get(
+			finalElementToInsert.openingElement as JSXOpeningElement,
+		) ?? null;
 
 	return {
 		fileName: location.fileName,
@@ -2331,6 +2411,8 @@ export const insertJsxElementIntoComposition = async ({
 		oldContents: input,
 		output,
 		formatted,
+		insertedNodePath,
 		logLine,
+		nodePathRemappings,
 	};
 };

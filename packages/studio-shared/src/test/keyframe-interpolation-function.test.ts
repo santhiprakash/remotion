@@ -5,11 +5,15 @@ import {
 	canEditEasingForInterpolationFunction,
 	getKeyframeInterpolationFunctionForSchemaField,
 	isInteractivitySchemaFieldKeyframable,
+	isSchemaFieldHoldOnly,
 	isSchemaFieldKeyframable,
 } from '../keyframe-interpolation-function';
 
 test('border longhand fields keyframe width and color, but not style', () => {
-	const schema = Interactive.borderSchema;
+	const schema = {
+		...Interactive.borderSchema,
+		...Interactive.borderRadiusSchema,
+	};
 
 	expect(isSchemaFieldKeyframable({schema, key: 'style.borderWidth'})).toBe(
 		true,
@@ -20,6 +24,21 @@ test('border longhand fields keyframe width and color, but not style', () => {
 	expect(isSchemaFieldKeyframable({schema, key: 'style.borderStyle'})).toBe(
 		false,
 	);
+	expect(isSchemaFieldKeyframable({schema, key: 'style.borderRadius'})).toBe(
+		true,
+	);
+	expect(
+		isSchemaFieldKeyframable({schema, key: 'style.borderTopLeftRadius'}),
+	).toBe(true);
+});
+
+test('background color is keyframable', () => {
+	expect(
+		isSchemaFieldKeyframable({
+			schema: Interactive.backgroundSchema,
+			key: 'style.backgroundColor',
+		}),
+	).toBe(true);
 });
 
 test('known interpolation functions explicitly support easing', () => {
@@ -38,7 +57,7 @@ test('field type keyframe support is explicit', () => {
 	).toBe(false);
 });
 
-test('isSchemaFieldKeyframable rejects enum fields', () => {
+test('enum fields are keyframable and hold-only when explicitly enabled', () => {
 	const schema = {
 		layout: {
 			type: 'enum',
@@ -51,7 +70,27 @@ test('isSchemaFieldKeyframable rejects enum fields', () => {
 		},
 	} satisfies InteractivitySchema;
 
+	expect(isSchemaFieldKeyframable({schema, key: 'layout'})).toBe(true);
+	expect(isSchemaFieldHoldOnly({schema, key: 'layout'})).toBe(true);
+	expect(
+		getKeyframeInterpolationFunctionForSchemaField({schema, key: 'layout'}),
+	).toBe('interpolate');
+});
+
+test('enum fields are not keyframable by default', () => {
+	const schema = {
+		layout: {
+			type: 'enum',
+			default: 'absolute-fill',
+			variants: {
+				'absolute-fill': {},
+				none: {},
+			},
+		},
+	} satisfies InteractivitySchema;
+
 	expect(isSchemaFieldKeyframable({schema, key: 'layout'})).toBe(false);
+	expect(isSchemaFieldHoldOnly({schema, key: 'layout'})).toBe(false);
 });
 
 test('isSchemaFieldKeyframable rejects explicitly disabled fields', () => {
