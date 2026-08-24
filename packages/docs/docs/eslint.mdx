@@ -1,0 +1,152 @@
+---
+image: /generated/articles-docs-eslint.png
+id: eslint
+title: ESLint
+sidebar_label: ESLint
+crumb: Tooling
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+Remotion ships an ESLint plugin and shareable configs to catch common mistakes when writing Remotion code.
+
+## Packages
+
+### [`@remotion/eslint-plugin`](/docs/eslint#using-the-plugin-directly)
+
+Contains Remotion-specific lint rules. Use it directly if you already have an ESLint config and only want to add Remotion rules.
+
+### [`@remotion/eslint-config`](/docs/eslint#using-the-legacy-config)
+
+A shareable config for projects that use the legacy `.eslintrc` format. It bundles the plugin with TypeScript, React and React Hooks rules.
+
+### [`@remotion/eslint-config-flat`](/docs/eslint#using-the-flat-config)
+
+A shareable config for projects that use the [flat config format](https://eslint.org/docs/latest/use/configure/configuration-files) introduced in ESLint 9.
+
+## When to use the config versus the plugin directly
+
+Use one of the config packages if you want a ready-made rule set and do not already have a heavily customized ESLint setup.
+
+Use [`@remotion/eslint-plugin`](/docs/eslint#using-the-plugin-directly) directly if you are managing your own config and only want to enable the Remotion rules.
+
+## Supported ESLint versions
+
+- [`@remotion/eslint-config`](/docs/eslint#using-the-legacy-config) works with the legacy `.eslintrc` format and requires ESLint `>= 7.15.0` (or `>= 8.57.0` in Remotion 5.0).
+- [`@remotion/eslint-config-flat`](/docs/eslint#using-the-flat-config) requires ESLint `>= 9`.
+- [`@remotion/eslint-plugin`](/docs/eslint#using-the-plugin-directly) supports ESLint `>= 7.0.0`.
+
+## Using the legacy config
+
+<Installation pkg="@remotion/eslint-config" />
+
+Then extend it in your `.eslintrc`:
+
+```json title=".eslintrc"
+{
+  "extends": ["@remotion"]
+}
+```
+
+The legacy config enables the recommended Remotion rules along with TypeScript, React and React Hooks rules.
+
+## Using the flat config
+
+<Installation pkg="@remotion/eslint-config-flat" />
+
+Then import the config in your `eslint.config.mjs`:
+
+```js title="eslint.config.mjs"
+import { config } from "@remotion/eslint-config-flat";
+
+export default config;
+```
+
+By default the flat config applies Remotion rules to all files. Use `makeConfig({ remotionDir })` to limit Remotion rules to a specific directory:
+
+```js title="eslint.config.mjs"
+import { makeConfig } from "@remotion/eslint-config-flat";
+
+export default makeConfig({ remotionDir: "src/remotion/**" });
+```
+
+## Using the plugin directly
+
+<Installation pkg="@remotion/eslint-plugin" />
+
+### Legacy `.eslintrc`
+
+```json title=".eslintrc"
+{
+  "plugins": ["@remotion"],
+  "overrides": [
+    {
+      "files": ["remotion/*.{ts,tsx}"],
+      "extends": ["plugin:@remotion/recommended"]
+    }
+  ]
+}
+```
+
+### Flat config
+
+```js title="eslint.config.mjs"
+import remotion from "@remotion/eslint-plugin";
+
+export default [
+  {
+    files: ["src/remotion/**"],
+    ...remotion.flatPlugin,
+    rules: {
+      ...remotion.flatPlugin.rules,
+    },
+  },
+];
+```
+
+## Rule overview
+
+The recommended config enables the following rules:
+
+| Rule | Severity | Description |
+| ---- | -------- | ----------- |
+| `@remotion/warn-native-media-tag` | `error` | Prefer [`<Img>`](/docs/img), [`<IFrame>`](/docs/iframe), [`<Audio>`](/docs/media/audio) and [`<Video>`](/docs/media/video) over native media tags. |
+| `@remotion/deterministic-randomness` | `error` | Use [`random()`](/docs/random) instead of `Math.random()` for deterministic values across frames. |
+| `@remotion/no-string-assets` | `error` | Don't reference local assets by string in `src` attributes; use imports or [`staticFile()`](/docs/staticfile). |
+| `@remotion/even-dimensions` | `error` | Composition dimensions should be divisible by 2 for H.264/H.265 codecs. |
+| `@remotion/duration-in-frames` | `error` | Remove `durationInFrames={Infinity}` from [`<Sequence>`](/docs/sequence) because it is the default. |
+| `@remotion/from-0` | `error` | Remove `from={0}` from [`<Sequence>`](/docs/sequence) because it is the default. |
+| `@remotion/volume-callback` | `error` | Prefer a callback for the `volume` prop on media elements. |
+| `@remotion/use-gif-component` | `error` | Use the [`<Gif>`](/docs/gif) component for animated GIFs. |
+| `@remotion/staticfile-no-relative` | `error` | Don't pass relative paths to [`staticFile()`](/docs/staticfile). |
+| `@remotion/staticfile-no-remote` | `error` | Don't pass remote URLs to [`staticFile()`](/docs/staticfile). |
+| `@remotion/no-background-image` | `error` | Don't use `background-image` in Remotion. See [troubleshooting guide](/docs/troubleshooting/background-image). |
+| `@remotion/non-pure-animation` | `warn` | Avoid CSS transitions that don't run purely off [`useCurrentFrame()`](/docs/use-current-frame), as they can cause flickering. |
+| `@remotion/v4-config-import` | `error` | Update the config import from `remotion` to `@remotion/cli/config`. |
+| `@remotion/no-object-fit-on-media-video` | `warn` | Use the `objectFit` prop directly instead of the `style` or `className` prop on [`<Video>`](/docs/media/video). |
+| `@remotion/valid-composition-and-folder-name` | `error` | Composition and folder IDs may only contain alphanumeric, CJK and `-` characters. |
+
+## Overriding rules
+
+Disable or change a rule the same way as any other ESLint rule:
+
+```json title=".eslintrc"
+{
+  "rules": {
+    "@remotion/no-background-image": "off"
+  }
+}
+```
+
+For flat config:
+
+```js title="eslint.config.mjs"
+export default [
+  {
+    rules: {
+      "@remotion/no-background-image": "off",
+    },
+  },
+];
+```

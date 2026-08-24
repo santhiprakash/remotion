@@ -2556,6 +2556,15 @@ export const articles = [
 		slug: 'env-variables',
 	},
 	{
+		id: 'eslint',
+		title: 'ESLint',
+		relativePath: 'docs/eslint.mdx',
+		compId: 'articles-docs-eslint',
+		crumb: 'Tooling',
+		noAi: false,
+		slug: 'eslint',
+	},
+	{
 		id: 'ffmpeg',
 		title: 'Installing FFmpeg',
 		relativePath: 'docs/ffmpeg.mdx',

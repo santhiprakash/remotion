@@ -1514,6 +1514,7 @@ const sidebars: SidebarsConfig = {
 				'third-party',
 				'miscellaneous/typescript-aliases',
 				'testing',
+				'eslint',
 				'figma',
 				'after-effects',
 			],
